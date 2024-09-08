@@ -7,10 +7,6 @@
 # General application configuration
 import Config
 
-config :project_73,
-  ecto_repos: [Project73.Repo],
-  generators: [timestamp_type: :utc_datetime]
-
 # Configures the endpoint
 config :project_73, Project73Web.Endpoint,
   url: [host: "localhost"],
