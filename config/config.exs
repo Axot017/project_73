@@ -64,3 +64,6 @@ config :phoenix, :json_library, Jason
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
+
+config :project_73, :auction_repository, Project73.Auction.InMemoryRepostory
+config :project_73, :auction_notifier, Project73.PubsubNotifier
