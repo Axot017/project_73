@@ -61,5 +61,11 @@ config :phoenix, :json_library, Jason
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
 
-config :project_73, :auction_repository, Project73.Auction.InMemoryRepostory
+config :project_73, :auction_repository, Project73.Auction.MongoRepository
 config :project_73, :auction_notifier, Project73.PubsubNotifier
+
+config :project_73, :mongo,
+  url: "mongodb://localhost:27017/?directConnection=true",
+  database: "project_73",
+  pool_size: 10,
+  name: :mongo

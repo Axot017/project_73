@@ -1,5 +1,13 @@
 defmodule Project73.Auction.Aggregate do
-  defstruct [:id, :name, :current_price, :highest_bidder, :last_bid_at, :created_at]
+  defstruct [
+    :id,
+    :name,
+    :current_price,
+    :highest_bidder,
+    :last_bid_at,
+    :created_at,
+    :version
+  ]
 
   def empty() do
     %__MODULE__{}
@@ -19,7 +27,8 @@ defmodule Project73.Auction.Aggregate do
              type: :auction_created,
              name: name,
              initial_price: initial_price,
-             timestamp: DateTime.utc_now()
+             timestamp: DateTime.utc_now(),
+             sequence_number: 1
            }
          ]}
 
@@ -31,7 +40,16 @@ defmodule Project73.Auction.Aggregate do
   def bid(%__MODULE__{} = self, bidder, amount) do
     case amount > self.current_price do
       true ->
-        {:ok, [%{type: :bid, bidder: bidder, amount: amount, timestamp: DateTime.utc_now()}]}
+        {:ok,
+         [
+           %{
+             type: :bid,
+             bidder: bidder,
+             amount: amount,
+             timestamp: DateTime.utc_now(),
+             sequence_number: self.version + 1
+           }
+         ]}
 
       false ->
         {:error, :price_too_low}
@@ -54,7 +72,8 @@ defmodule Project73.Auction.Aggregate do
       self
       | current_price: event.amount,
         highest_bidder: event.bidder,
-        last_bid_at: event.timestamp
+        last_bid_at: event.timestamp,
+        version: event.sequence_number
     }
   end
 
@@ -68,7 +87,8 @@ defmodule Project73.Auction.Aggregate do
       self
       | name: event.name,
         current_price: event.initial_price,
-        created_at: event.timestamp
+        created_at: event.timestamp,
+        version: event.sequence_number
     }
   end
 end
