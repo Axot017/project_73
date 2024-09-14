@@ -69,3 +69,8 @@ config :project_73, :mongo,
   database: "project_73",
   pool_size: 10,
   name: :mongo
+
+config :ueberauth, Ueberauth,
+  providers: [
+    google: {Ueberauth.Strategy.Google, []}
+  ]

@@ -4,7 +4,8 @@ defmodule Project73Web.AuctionLive do
   alias Project73.Auction
   use Project73Web, :live_view
 
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
+    Logger.info("Session: #{inspect(session)}")
     PubSub.subscribe(Project73.PubSub, "auction:test_auction")
     {:ok, pid} = Auction.Supervisor.actor_pid("test_auction")
 
@@ -30,6 +31,8 @@ defmodule Project73Web.AuctionLive do
       <% else %>
         <button phx-click="create_auction">Create Auction</button>
       <% end %>
+
+      <.link href={~p"/auth/google"}>Login</.link>
     </div>
     """
   end

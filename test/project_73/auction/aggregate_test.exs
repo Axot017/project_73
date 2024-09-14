@@ -8,7 +8,14 @@ defmodule Project73.Auction.AggregateTest do
 
       {:ok, events} = Aggregate.create(auction, "Test Auction", 100)
 
-      assert [%{type: :auction_created, name: "Test Auction", initial_price: 100}] = events
+      assert [
+               %{
+                 type: :auction_created,
+                 name: "Test Auction",
+                 initial_price: 100,
+                 sequence_number: 1
+               }
+             ] = events
     end
 
     test "returns an error if auction is already created" do

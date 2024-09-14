@@ -22,6 +22,13 @@ defmodule Project73Web.Router do
     live "/auction", AuctionLive
   end
 
+  scope "/auth", Project73Web do
+    pipe_through :browser
+
+    get "/:provider", AuthController, :request
+    get "/:provider/callback", AuthController, :callback
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", Project73Web do
   #   pipe_through :api
