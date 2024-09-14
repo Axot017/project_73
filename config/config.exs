@@ -54,8 +54,7 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
-# Use Jason for JSON parsing in Phoenix
-config :phoenix, :json_library, Jason
+config :phoenix, :json_library, Poison
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
@@ -64,6 +63,8 @@ import_config "#{config_env()}.exs"
 config :project_73, :auction_repository, Project73.Auction.MongoRepository
 config :project_73, :auction_notifier, Project73.PubsubNotifier
 
+config :project_73, :profile_repository, Project73.Profile.MongoRepository
+
 config :project_73, :mongo,
   url: "mongodb://localhost:27017/?directConnection=true",
   database: "project_73",
@@ -71,6 +72,7 @@ config :project_73, :mongo,
   name: :mongo
 
 config :ueberauth, Ueberauth,
+  json_library: Poison,
   providers: [
     google: {Ueberauth.Strategy.Google, []}
   ]
