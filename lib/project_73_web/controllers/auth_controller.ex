@@ -18,7 +18,8 @@ defmodule Project73Web.AuthController do
     user = %{id: provider_id}
 
     with {:ok, pid} <- Project73.Profile.Supervisor.get_actor(provider_id),
-         :ok <- Project73.Profile.Actor.create(pid, provider_id, provider, email) do
+         :ok <- Project73.Profile.Actor.create(pid, provider_id, provider, email),
+         user <- Project73.Profile.Actor.get_profile(pid) do
       success(conn, user)
     else
       {:error, :already_created} ->
@@ -41,10 +42,16 @@ defmodule Project73Web.AuthController do
   end
 
   defp success(conn, user) do
-    conn
-    |> put_flash(:info, "Successfully authenticated.")
-    |> put_session(:current_user, user)
-    |> configure_session(renew: true)
-    |> redirect(to: "/auction")
+    res =
+      conn
+      |> put_flash(:info, "Successfully authenticated.")
+      |> put_session(:current_user, user)
+      |> configure_session(renew: true)
+
+    if not Map.has_key?(user, :username) do
+      res |> redirect(to: ~p"/profile/setup")
+    else
+      res |> redirect(to: "/auction")
+    end
   end
 end

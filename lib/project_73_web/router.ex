@@ -32,6 +32,12 @@ defmodule Project73Web.Router do
     delete "/logout", AuthController, :delete
   end
 
+  scope "/profile", Project73Web do
+    pipe_through :browser
+
+    live "/setup", ProfileLive
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", Project73Web do
   #   pipe_through :api

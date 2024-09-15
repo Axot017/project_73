@@ -2,6 +2,7 @@ defmodule Project73.Profile.Event.Created do
   @type t :: %__MODULE__{
           id: String.t(),
           provider: String.t(),
+          username: String.t(),
           email: String.t(),
           timestamp: DateTime.t(),
           sequence_number: integer()
@@ -10,6 +11,7 @@ defmodule Project73.Profile.Event.Created do
   defstruct [
     :id,
     :provider,
+    :username,
     :email,
     :timestamp,
     :sequence_number
