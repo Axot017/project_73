@@ -74,5 +74,6 @@ config :project_73, :mongo,
 config :ueberauth, Ueberauth,
   json_library: Poison,
   providers: [
-    google: {Ueberauth.Strategy.Google, []}
+    google: {Ueberauth.Strategy.Google, []},
+    facebook: {Ueberauth.Strategy.Facebook, []}
   ]

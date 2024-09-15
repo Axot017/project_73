@@ -32,7 +32,8 @@ defmodule Project73Web.AuctionLive do
         <button phx-click="create_auction">Create Auction</button>
       <% end %>
 
-      <.link href={~p"/auth/google"}>Login</.link>
+      <.link href={~p"/auth/google"}>Login with google</.link>
+      <.link href={~p"/auth/facebook"}>Login with facebook</.link>
     </div>
     """
   end
