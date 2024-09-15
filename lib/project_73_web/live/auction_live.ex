@@ -30,14 +30,6 @@ defmodule Project73Web.AuctionLive do
       <% else %>
         <button phx-click="create_auction">Create Auction</button>
       <% end %>
-
-      <%= if @current_user != nil do %>
-        <p>Logged in as: <%= @current_user %></p>
-        <.link href={~p"/auth/logout"} method="delete">Logout</.link>
-      <% else %>
-        <.link href={~p"/auth/google"}>Login with google</.link>
-        <.link href={~p"/auth/facebook"}>Login with facebook</.link>
-      <% end %>
     </div>
     """
   end

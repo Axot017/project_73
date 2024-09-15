@@ -14,13 +14,15 @@ defmodule Project73Web.AuthController do
     email = auth.info.email
     provider = Atom.to_string(auth.provider)
     provider_id = Project73.Profile.Aggregate.provider_id(provider, id)
+    Logger.debug("Auth details: #{inspect(auth)}")
+    user = %{id: provider_id}
 
     with {:ok, pid} <- Project73.Profile.Supervisor.get_actor(provider_id),
          :ok <- Project73.Profile.Actor.create(pid, provider_id, provider, email) do
-      success(conn, provider_id)
+      success(conn, user)
     else
       {:error, :already_created} ->
-        success(conn, provider_id)
+        success(conn, user)
 
       {:error, reason} ->
         Logger.error("Failed to get profile: #{inspect(reason)}")
@@ -38,10 +40,10 @@ defmodule Project73Web.AuthController do
     |> redirect(to: "/auction")
   end
 
-  defp success(conn, provider_id) do
+  defp success(conn, user) do
     conn
     |> put_flash(:info, "Successfully authenticated.")
-    |> put_session(:current_user, provider_id)
+    |> put_session(:current_user, user)
     |> configure_session(renew: true)
     |> redirect(to: "/auction")
   end

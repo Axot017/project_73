@@ -6,4 +6,8 @@ defmodule Project73Web.PageController do
     # so skip the default app layout.
     render(conn, :home, layout: false)
   end
+
+  def login(conn, _params) do
+    render(conn, :login, layout: false)
+  end
 end

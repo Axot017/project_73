@@ -85,10 +85,15 @@ defmodule Project73Web do
       import Phoenix.HTML
       # Core UI components and translation
       import Project73Web.CoreComponents
+      import Project73Web.BaseComponents
       import Project73Web.Gettext
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
+
+      def current_user(conn) do
+        Plug.Conn.get_session(conn, :current_user)
+      end
 
       # Routes generation with the ~p sigil
       unquote(verified_routes())
