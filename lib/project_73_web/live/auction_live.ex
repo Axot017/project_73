@@ -5,14 +5,13 @@ defmodule Project73Web.AuctionLive do
   use Project73Web, :live_view
 
   def mount(_params, session, socket) do
-    Logger.info("Session: #{inspect(session)}")
     PubSub.subscribe(Project73.PubSub, "auction:test_auction")
     {:ok, pid} = Auction.Supervisor.actor_pid("test_auction")
 
     auction = Auction.Actor.get(pid)
     Logger.info("Auction: #{inspect(auction)}")
 
-    {:ok, assign(socket, auction: auction)}
+    {:ok, assign(socket, auction: auction, current_user: session["current_user"])}
   end
 
   def handle_info({:new_bid, amount}, socket) do
@@ -32,8 +31,13 @@ defmodule Project73Web.AuctionLive do
         <button phx-click="create_auction">Create Auction</button>
       <% end %>
 
-      <.link href={~p"/auth/google"}>Login with google</.link>
-      <.link href={~p"/auth/facebook"}>Login with facebook</.link>
+      <%= if @current_user != nil do %>
+        <p>Logged in as: <%= @current_user %></p>
+        <.link href={~p"/auth/logout"} method="delete">Logout</.link>
+      <% else %>
+        <.link href={~p"/auth/google"}>Login with google</.link>
+        <.link href={~p"/auth/facebook"}>Login with facebook</.link>
+      <% end %>
     </div>
     """
   end

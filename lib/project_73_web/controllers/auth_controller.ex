@@ -31,6 +31,13 @@ defmodule Project73Web.AuthController do
     end
   end
 
+  def delete(conn, _params) do
+    conn
+    |> delete_session(:current_user)
+    |> put_flash(:info, "Logged out.")
+    |> redirect(to: "/auction")
+  end
+
   defp success(conn, provider_id) do
     conn
     |> put_flash(:info, "Successfully authenticated.")
