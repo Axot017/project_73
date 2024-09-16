@@ -15,18 +15,18 @@ defmodule Project73Web.ProfileLive do
 
   def render(assigns) do
     ~H"""
-    <.form for={@form} phx-submit="save">
-      <.input type="text" name="username" value="" field={@form[:username]} />
-
-      <.button>Save</.button>
-    </.form>
+    <.simple_form for={@form} phx-submit="save">
+      <.input label="Username" name="username" value="" field={@form[:username]} minlength="3" />
+      <:actions>
+        <.button>Save</.button>
+      </:actions>
+    </.simple_form>
     """
   end
 
   def handle_event("save", %{"username" => username}, socket) do
-    user_id = socket.assigns.profile.id
-    Logger.debug("Saving profile for user_id: #{user_id}: #{username}")
+    :ok = Profile.Actor.update_profile(socket.assigns.actor_pid, %{username: username})
 
-    {:noreply, redirect(socket, to: ~p"/auction")}
+    {:noreply, redirect(socket, to: ~p"/auth/refresh")}
   end
 end

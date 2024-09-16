@@ -15,15 +15,13 @@ defmodule Project73Web.AuthController do
     provider = Atom.to_string(auth.provider)
     provider_id = Project73.Profile.Aggregate.provider_id(provider, id)
     Logger.debug("Auth details: #{inspect(auth)}")
-    user = %{id: provider_id}
 
     with {:ok, pid} <- Project73.Profile.Supervisor.get_actor(provider_id),
-         :ok <- Project73.Profile.Actor.create(pid, provider_id, provider, email),
-         user <- Project73.Profile.Actor.get_profile(pid) do
-      success(conn, user)
+         :ok <- Project73.Profile.Actor.create(pid, provider_id, provider, email) do
+      success(conn, provider_id)
     else
       {:error, :already_created} ->
-        success(conn, user)
+        success(conn, provider_id)
 
       {:error, reason} ->
         Logger.error("Failed to get profile: #{inspect(reason)}")
@@ -41,17 +39,35 @@ defmodule Project73Web.AuthController do
     |> redirect(to: "/auction")
   end
 
-  defp success(conn, user) do
-    res =
-      conn
-      |> put_flash(:info, "Successfully authenticated.")
-      |> put_session(:current_user, user)
-      |> configure_session(renew: true)
+  defp success(conn, user_id) do
+    with {:ok, pid} <- Project73.Profile.Supervisor.get_actor(user_id),
+         profile <- Project73.Profile.Actor.get_profile(pid) do
+      Logger.debug("Profile loaded: #{inspect(profile)}")
 
-    if not Map.has_key?(user, :username) do
-      res |> redirect(to: ~p"/profile/setup")
+      res =
+        conn
+        |> put_flash(:info, "Successfully authenticated.")
+        |> put_session(:current_user, profile)
+        |> configure_session(renew: true)
+
+      if profile.username == nil do
+        res |> redirect(to: ~p"/profile/setup")
+      else
+        res |> redirect(to: "/auction")
+      end
     else
-      res |> redirect(to: "/auction")
+      {:error, reason} ->
+        Logger.error("Failed to get profile: #{inspect(reason)}")
+
+        conn
+        |> put_flash(:error, "Failed to authenticate.")
+        |> redirect(to: "/")
     end
+  end
+
+  def refresh(conn, _params) do
+    profile = get_session(conn, :current_user)
+
+    success(conn, profile.id)
   end
 end

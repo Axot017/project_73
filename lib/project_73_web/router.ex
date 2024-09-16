@@ -27,9 +27,11 @@ defmodule Project73Web.Router do
   scope "/auth", Project73Web do
     pipe_through :browser
 
+    get "/refresh", AuthController, :refresh
+    delete "/logout", AuthController, :delete
+
     get "/:provider", AuthController, :request
     get "/:provider/callback", AuthController, :callback
-    delete "/logout", AuthController, :delete
   end
 
   scope "/profile", Project73Web do

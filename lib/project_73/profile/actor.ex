@@ -26,6 +26,10 @@ defmodule Project73.Profile.Actor do
     GenServer.call(pid, :get_profile)
   end
 
+  def update_profile(pid, data) do
+    GenServer.call(pid, {:update_profile, data})
+  end
+
   defp via_tuple(user_id) do
     {:via, Registry, {:profile_registry, user_id}}
   end
@@ -33,6 +37,18 @@ defmodule Project73.Profile.Actor do
   def handle_call({:create, id, provider, email}, _from, state) do
     with {:ok, events} <- Aggregate.create(state.aggregate, id, provider, email),
          :ok <- @repository.save_events(id, events) do
+      new_state = Aggregate.apply(state.aggregate, events)
+      {:reply, :ok, %__MODULE__{aggregate: new_state}}
+    else
+      {:error, _} = error ->
+        {:reply, error, state}
+    end
+  end
+
+  def handle_call({:update_profile, data}, _from, state) do
+    events = Aggregate.update_profile(state.aggregate, data)
+
+    with :ok <- @repository.save_events(state.aggregate.id, events) do
       new_state = Aggregate.apply(state.aggregate, events)
       {:reply, :ok, %__MODULE__{aggregate: new_state}}
     else

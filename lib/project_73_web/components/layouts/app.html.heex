@@ -10,7 +10,7 @@
     </div>
     <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
       <%= if @current_user != nil do %>
-        <%= @current_user.id %>
+        <%= @current_user.username %>
         <.redirect_button href={~p"/auth/logout"} method="delete">Logout</.redirect_button>
       <% else %>
         <.redirect_button href={~p"/login"}>Log in</.redirect_button>

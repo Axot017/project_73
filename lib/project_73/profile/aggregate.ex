@@ -18,23 +18,44 @@ defmodule Project73.Profile.Event.Created do
   ]
 end
 
+defmodule Project73.Profile.Event.UsernameChanged do
+  @type t :: %__MODULE__{
+          username: String.t(),
+          timestamp: DateTime.t(),
+          sequence_number: integer()
+        }
+
+  defstruct [
+    :id,
+    :username,
+    :timestamp,
+    :sequence_number
+  ]
+end
+
 defmodule Project73.Profile.Aggregate do
   alias Project73.Profile.Event
 
-  @type event :: {:profile_created, Event.Created.t()}
+  @type event ::
+          {:profile_created, Event.Created.t()}
+          | {:profile_updated, Event.UsernameChanged.t()}
 
   @type t :: %__MODULE__{
           id: String.t(),
           provider: String.t(),
           email: String.t(),
-          created_at: DateTime.t()
+          username: String.t(),
+          created_at: DateTime.t(),
+          version: integer()
         }
 
   defstruct [
     :id,
     :provider,
     :email,
-    :created_at
+    :username,
+    :created_at,
+    :version
   ]
 
   def provider_id(provider, id) do
@@ -67,6 +88,20 @@ defmodule Project73.Profile.Aggregate do
     end
   end
 
+  @type update_profile_data :: %{:username => String.t()}
+
+  @spec update_profile(t(), update_profile_data()) :: [event()]
+  def update_profile(%__MODULE__{} = self, data) do
+    [
+      {:profile_updated,
+       %Event.UsernameChanged{
+         username: data.username,
+         timestamp: DateTime.utc_now(),
+         sequence_number: self.version + 1
+       }}
+    ]
+  end
+
   @spec apply(t(), [event()]) :: t()
   def apply(self, events) do
     Enum.reduce(events, self, &apply_event(&2, &1))
@@ -77,7 +112,16 @@ defmodule Project73.Profile.Aggregate do
       id: event.id,
       provider: event.provider,
       email: event.email,
-      created_at: event.timestamp
+      created_at: event.timestamp,
+      version: event.sequence_number
+    }
+  end
+
+  defp apply_event(%__MODULE__{} = self, {:profile_updated, event}) do
+    %__MODULE__{
+      self
+      | username: event.username,
+        version: event.sequence_number
     }
   end
 end
