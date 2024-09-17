@@ -1,26 +1,42 @@
-<header class="px-4 sm:px-6 lg:px-8">
-  <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
-    <div class="flex items-center gap-4">
-      <a href="/">
-        <img src={~p"/images/logo.svg"} width="36" />
-      </a>
-      <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6">
-        v<%= Application.spec(:phoenix, :vsn) %>
-      </p>
+<div class="min-h-screen bg-gray-900 text-gray-100">
+  <header class="bg-gray-800 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center">
+          <a href="/" class="flex-shrink-0">
+            <img class="h-8 w-8" src={~p"/images/logo.svg"} alt="Logo" />
+          </a>
+          <div class="ml-4 flex items-baseline space-x-4">
+            <div class="bg-gray-700 text-gray-300 px-3 py-1 rounded-md text-sm font-medium">
+              v<%= Application.spec(:phoenix, :vsn) %>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center">
+          <%= if @current_user != nil do %>
+            <span class="text-gray-300 mr-4"><%= @current_user.username %></span>
+            <.redirect_button
+              href={~p"/auth/logout"}
+              method="delete"
+              class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+            >
+              Logout
+            </.redirect_button>
+          <% else %>
+            <.redirect_button
+              href={~p"/login"}
+              class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+            >
+              Log in
+            </.redirect_button>
+          <% end %>
+        </div>
+      </div>
     </div>
-    <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
-      <%= if @current_user != nil do %>
-        <%= @current_user.username %>
-        <.redirect_button href={~p"/auth/logout"} method="delete">Logout</.redirect_button>
-      <% else %>
-        <.redirect_button href={~p"/login"}>Log in</.redirect_button>
-      <% end %>
-    </div>
-  </div>
-</header>
-<main class="px-4 py-20 sm:px-6 lg:px-8">
-  <div class="mx-auto max-w-2xl">
+  </header>
+
+  <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <.flash_group flash={@flash} />
     <%= @inner_content %>
-  </div>
-</main>
+  </main>
+</div>

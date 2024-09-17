@@ -50,7 +50,6 @@ defmodule Project73.Profile.MongoRepository do
           |> List.flatten()
           |> Enum.map(&Utils.Mongo.parse_keys_to_atoms/1)
           |> Enum.map(&Utils.Mongo.to_typed_event/1)
-          |> Enum.map(&map_event/1)
 
         if Enum.empty?(events) do
           :ok
@@ -63,10 +62,5 @@ defmodule Project73.Profile.MongoRepository do
           {:ok, aggregate}
         end
     end
-  end
-
-  @spec map_event(any()) :: Project73.Profile.Aggregate.event()
-  defp map_event({:profile_created, event}) do
-    {:profile_created, struct(Project73.Profile.Event.Created, event)}
   end
 end
