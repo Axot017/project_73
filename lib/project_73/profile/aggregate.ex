@@ -4,6 +4,7 @@ defmodule Project73.Profile.Aggregate do
           provider: String.t(),
           email: String.t(),
           username: String.t(),
+          avatar_url: String.t(),
           created_at: DateTime.t(),
           version: integer()
         }
@@ -13,6 +14,7 @@ defmodule Project73.Profile.Aggregate do
     :provider,
     :email,
     :username,
+    :avatar_url,
     :created_at,
     :version
   ]
@@ -65,6 +67,7 @@ defmodule Project73.Profile.Aggregate do
       id: event.id,
       provider: event.provider,
       email: event.email,
+      avatar_url: nil,
       created_at: event.timestamp,
       version: event.sequence_number
     }

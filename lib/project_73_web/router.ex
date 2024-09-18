@@ -37,7 +37,7 @@ defmodule Project73Web.Router do
   scope "/profile", Project73Web do
     pipe_through :browser
 
-    live "/setup", ProfileLive
+    live "/setup", ProfileSetupLive
   end
 
   # Other scopes may use custom stacks.
