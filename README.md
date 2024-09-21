@@ -1,18 +1,22 @@
 # Project73
 
-To start your Phoenix server:
+## TODO
 
-  * Run `mix setup` to install and setup dependencies
-  * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
-
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
-
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
-
-## Learn more
-
-  * Official website: https://www.phoenixframework.org/
-  * Guides: https://hexdocs.pm/phoenix/overview.html
-  * Docs: https://hexdocs.pm/phoenix
-  * Forum: https://elixirforum.com/c/phoenix-forum
-  * Source: https://github.com/phoenixframework/phoenix
+- [ ] Profile
+    - [ ] Create profile setup page (Username, first and last name, address)
+    - [ ] Create stripe customer after profile setup
+    - [ ] Configure onboarding flow to make sure its not possible to create multiple stripe accounts
+    - [ ] Allow user to deposit money
+    - [ ] Allow user to withdraw money
+    - [ ] Add profile page
+    - [ ] Add edit profile page
+    - [ ] Create image upload page - to local files
+    - [ ] Upload profile image to bucket (gcp or aws)
+- [ ] Auction
+    - [ ] Add create auction page
+    - [ ] Add page with list of time windows
+    - [ ] Add page with list of auctions in time window
+    - [ ] Allow user to bid in the auction
+    - [ ] Allow user to add auctions to favourite
+- [ ] Post auction
+    - [ ] TODO
