@@ -62,7 +62,8 @@ defmodule Project73.MixProject do
       {:bandit, "~> 1.5"},
       {:ueberauth, "~> 0.10"},
       {:ueberauth_google, "~> 0.10"},
-      {:ueberauth_facebook, "~> 0.10"}
+      {:ueberauth_facebook, "~> 0.10"},
+      {:stripity_stripe, "~> 3.2"}
     ]
   end
 

@@ -64,6 +64,7 @@ config :project_73, :auction_repository, Project73.Auction.MongoRepository
 config :project_73, :auction_notifier, Project73.PubsubNotifier
 
 config :project_73, :profile_repository, Project73.Profile.MongoRepository
+config :project_73, :payment_provider, Project73.Profile.StripeConnector
 
 config :project_73, :mongo,
   url: "mongodb://localhost:27017/?directConnection=true",

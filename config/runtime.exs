@@ -105,3 +105,7 @@ config :ueberauth, Ueberauth.Strategy.Google.OAuth,
 config :ueberauth, Ueberauth.Strategy.Facebook.OAuth,
   client_id: System.get_env("FACEBOOK_CLIENT_ID"),
   client_secret: System.get_env("FACEBOOK_CLIENT_SECRET")
+
+config :stripity_stripe,
+  api_key: System.get_env("STRIPE_SECRET_KEY"),
+  json_library: Poison

@@ -8,6 +8,7 @@ defmodule Project73.Profile.Actor do
   defstruct [:aggregate]
 
   @repository Application.compile_env(:project_73, :profile_repository)
+  @payment_provider Application.compile_env(:project_73, :payment_provider)
 
   def init(id) do
     GenServer.cast(self(), {:load, id})
@@ -48,8 +49,9 @@ defmodule Project73.Profile.Actor do
   def handle_call({:update_profile, data}, _from, state) do
     events = Aggregate.update_profile(state.aggregate, data)
 
-    with :ok <- @repository.save_events(state.aggregate.id, events) do
-      new_state = Aggregate.apply(state.aggregate, events)
+    with :ok <- @repository.save_events(state.aggregate.id, events),
+         new_state = Aggregate.apply(state.aggregate, events),
+         {:ok, _} <- @payment_provider.create_customer(new_state) do
       {:reply, :ok, %__MODULE__{aggregate: new_state}}
     else
       {:error, _} = error ->
