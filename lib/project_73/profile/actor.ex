@@ -36,7 +36,13 @@ defmodule Project73.Profile.Actor do
   end
 
   def handle_call({:create, id, provider, email}, _from, state) do
-    with {:ok, events} <- Aggregate.create(state.aggregate, id, provider, email),
+    with {:ok, events} <-
+           Aggregate.create(state.aggregate, %{
+             id: id,
+             provider: provider,
+             email: email
+           }),
+         _ <- Logger.debug("Events: #{inspect(events)}"),
          :ok <- @repository.save_events(id, events) do
       new_state = Aggregate.apply(state.aggregate, events)
       {:reply, :ok, %__MODULE__{aggregate: new_state}}
@@ -47,9 +53,8 @@ defmodule Project73.Profile.Actor do
   end
 
   def handle_call({:update_profile, data}, _from, state) do
-    events = Aggregate.update_profile(state.aggregate, data)
-
-    with :ok <- @repository.save_events(state.aggregate.id, events),
+    with {:ok, events} <- Aggregate.update_profile(state.aggregate, data),
+         :ok <- @repository.save_events(state.aggregate.id, events),
          new_state = Aggregate.apply(state.aggregate, events),
          {:ok, _} <- @payment_provider.create_customer(new_state) do
       {:reply, :ok, %__MODULE__{aggregate: new_state}}

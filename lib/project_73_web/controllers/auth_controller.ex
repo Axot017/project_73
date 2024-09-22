@@ -51,7 +51,7 @@ defmodule Project73Web.AuthController do
         |> configure_session(renew: true)
 
       if profile.username == nil do
-        res |> redirect(to: ~p"/profile/setup")
+        res |> redirect(to: ~p"/profile/update")
       else
         res |> redirect(to: "/auction")
       end

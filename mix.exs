@@ -63,7 +63,8 @@ defmodule Project73.MixProject do
       {:ueberauth, "~> 0.10"},
       {:ueberauth_google, "~> 0.10"},
       {:ueberauth_facebook, "~> 0.10"},
-      {:stripity_stripe, "~> 3.2"}
+      {:stripity_stripe, "~> 3.2"},
+      {:decimal, "~> 2.1"}
     ]
   end
 
