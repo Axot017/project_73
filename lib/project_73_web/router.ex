@@ -8,6 +8,8 @@ defmodule Project73Web.Router do
     plug :put_root_layout, html: {Project73Web.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+
+    plug Project73Web.Plug.SetLanguage
   end
 
   pipeline :api do
