@@ -1,6 +1,7 @@
 defmodule Project73.Profile.Aggregate do
   alias Project73.Common.Address
   alias Project73.Utils.Validator
+  require Logger
 
   @type t :: %__MODULE__{
           id: String.t(),
@@ -43,9 +44,9 @@ defmodule Project73.Profile.Aggregate do
   defp create_command_validator(),
     do:
       Validator.new()
-      |> Validator.field_not_empty(:id)
-      |> Validator.field_not_empty(:provider)
-      |> Validator.field_not_empty(:email)
+      |> Validator.field(:id, [&Validator.string/1, &Validator.is_not_empty/1])
+      |> Validator.field(:provider, [&Validator.string/1, &Validator.is_not_empty/1])
+      |> Validator.field(:email, [&Validator.string/1, &Validator.is_not_empty/1])
 
   def create(%__MODULE__{} = self, data) do
     case Validator.apply(create_command_validator(), data) do
@@ -85,14 +86,14 @@ defmodule Project73.Profile.Aggregate do
   defp update_command_validator(),
     do:
       Validator.new()
-      |> Validator.field_not_empty(:username)
-      |> Validator.field_not_empty(:first_name)
-      |> Validator.field_not_empty(:last_name)
-      |> Validator.field_not_empty(:country)
-      |> Validator.field_not_empty(:city)
-      |> Validator.field_not_empty(:postal_code)
-      |> Validator.field_not_empty(:address_line1)
-      |> Validator.field_not_empty(:address_line2)
+      |> Validator.field(:username, [&Validator.string/1, Validator.min_size(3)])
+      |> Validator.field(:first_name, [&Validator.string/1, &Validator.is_not_empty/1])
+      |> Validator.field(:last_name, [&Validator.string/1, &Validator.is_not_empty/1])
+      |> Validator.field(:country, [&Validator.string/1, &Validator.is_not_empty/1])
+      |> Validator.field(:city, [&Validator.string/1, &Validator.is_not_empty/1])
+      |> Validator.field(:postal_code, [&Validator.string/1, &Validator.is_not_empty/1])
+      |> Validator.field(:address_line1, [&Validator.string/1, &Validator.is_not_empty/1])
+      |> Validator.field(:address_line2, [&Validator.string/1])
 
   def update_profile(%__MODULE__{} = self, data) do
     with {:ok,
@@ -120,11 +121,15 @@ defmodule Project73.Profile.Aggregate do
         })
 
       if events == [] do
-        []
+        {:ok, []}
       else
-        Enum.map(events, fn {event, payload} ->
-          {event, Map.put(payload, :sequence_number, self.version + 1)}
-        end)
+        versioned_events =
+          Enum.map(events, fn {event, payload} ->
+            {event, Map.put(payload, :sequence_number, self.version + 1)}
+          end)
+
+        Logger.debug("Events: ${inspect(versioned_events)}")
+        {:ok, versioned_events}
       end
     else
       error ->
@@ -141,12 +146,11 @@ defmodule Project73.Profile.Aggregate do
   end
 
   defp add_address_changed_event(events, self, new_address) do
-    current_address = Map.get(self, :address, %Address{})
+    current_address = Map.get(self, :address, %{})
 
-    if current_address != struct(Address, new_address) do
+    if current_address !== new_address do
       [
-        {:address_changed,
-         %{address: struct(Address, new_address), timestamp: DateTime.utc_now()}}
+        {:address_changed, %{address: new_address, timestamp: DateTime.utc_now()}}
         | events
       ]
     else

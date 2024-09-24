@@ -1,5 +1,6 @@
 defmodule Project73Web.ProfileUpdateLive do
   require Logger
+  alias Project73.Utils.Validator
   alias Project73.Profile
   use Project73Web, :live_view
 
@@ -11,7 +12,21 @@ defmodule Project73Web.ProfileUpdateLive do
 
     {:ok,
      socket
-     |> assign(profile: profile, actor_pid: pid, form: to_form(%{})), layout: false}
+     |> assign(
+       profile: profile,
+       actor_pid: pid,
+       form:
+         to_form(%{
+           "username" => profile.username,
+           "first_name" => profile.first_name,
+           "last_name" => profile.last_name,
+           "country" => profile.address && profile.address.country,
+           "city" => profile.address && profile.address.city,
+           "postal_code" => profile.address && profile.address.postal_code,
+           "address_line1" => profile.address && profile.address.line1,
+           "address_line2" => profile.address && profile.address.line2
+         })
+     ), layout: false}
   end
 
   def handle_event(
@@ -22,10 +37,10 @@ defmodule Project73Web.ProfileUpdateLive do
           "last_name" => last_name,
           "country" => country,
           "city" => city,
+          "postal_code" => postal_code,
           "address_line1" => address_line1,
-          "address_line2" => address_line2,
-          "postal_code" => postal_code
-        },
+          "address_line2" => address_line2
+        } = profile_form,
         socket
       ) do
     profile_params = %{
@@ -39,9 +54,35 @@ defmodule Project73Web.ProfileUpdateLive do
       postal_code: postal_code
     }
 
-    :ok = Profile.Actor.update_profile(socket.assigns.actor_pid, profile_params)
+    case Profile.Actor.update_profile(socket.assigns.actor_pid, profile_params) do
+      :ok ->
+        {:noreply, redirect(socket, to: ~p"/auth/refresh")}
 
-    {:noreply, redirect(socket, to: ~p"/auth/refresh")}
+      {:error, {:validation, errors}} ->
+        translated_errors = Validator.translate(errors)
+
+        updated_form =
+          to_form(profile_form)
+          |> Map.put(:errors, translated_errors)
+
+        {:noreply, assign(socket, form: updated_form)}
+    end
+  end
+
+  def handle_event("validate", %{"_target" => targets}, socket) do
+    form = socket.assigns.form
+
+    updated_errors =
+      form.errors
+      |> Enum.reject(fn {field, _msg} ->
+        Enum.any?(targets, fn target -> target == Atom.to_string(field) end)
+      end)
+
+    updated_form =
+      form
+      |> Map.put(:errors, updated_errors)
+
+    {:noreply, assign(socket, form: updated_form)}
   end
 
   def render(assigns) do
@@ -49,63 +90,45 @@ defmodule Project73Web.ProfileUpdateLive do
     <div class="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <div class="bg-gray-800 rounded-lg shadow-xl p-8 max-w-md w-full">
         <h2 class="text-3xl font-bold text-center text-gray-100 mb-8">Set Up Your Account</h2>
-        <.form for={@form} phx-submit="save" class="space-y-6">
+        <.simple_form for={@form} phx-submit="save" phx-change="validate" class="space-y-6">
           <.input
             label="Username"
-            name="username"
-            value={@profile.username}
             field={@form[:username]}
-            minlength="3"
-            required
             class="bg-gray-700 text-gray-100 border-gray-600 focus:border-indigo-500 focus:ring-indigo-500"
           />
           <.input
             label="First Name"
-            name="first_name"
-            value=""
             field={@form[:first_name]}
             class="bg-gray-700 text-gray-100 border-gray-600 focus:border-indigo-500 focus:ring-indigo-500"
           />
           <.input
             label="Last Name"
-            name="last_name"
-            value=""
             field={@form[:last_name]}
             class="bg-gray-700 text-gray-100 border-gray-600 focus:border-indigo-500 focus:ring-indigo-500"
           />
           <.input
             label="Country"
-            name="country"
-            value=""
             field={@form[:country]}
             class="bg-gray-700 text-gray-100 border-gray-600 focus:border-indigo-500 focus:ring-indigo-500"
           />
           <.input
             label="City"
-            name="city"
-            value=""
             field={@form[:city]}
             class="bg-gray-700 text-gray-100 border-gray-600 focus:border-indigo-500 focus:ring-indigo-500"
           />
           <.input
+            label="Postal Code"
+            field={@form[:postal_code]}
+            class="bg-gray-700 text-gray-100 border-gray-600 focus:border-indigo-500 focus:ring-indigo-500"
+          />
+          <.input
             label="Address Line 1"
-            name="address_line1"
-            value=""
             field={@form[:address_line1]}
             class="bg-gray-700 text-gray-100 border-gray-600 focus:border-indigo-500 focus:ring-indigo-500"
           />
           <.input
             label="Address Line 2"
-            name="address_line2"
-            value=""
             field={@form[:address_line2]}
-            class="bg-gray-700 text-gray-100 border-gray-600 focus:border-indigo-500 focus:ring-indigo-500"
-          />
-          <.input
-            label="Postal Code"
-            name="postal_code"
-            value=""
-            field={@form[:postal_code]}
             class="bg-gray-700 text-gray-100 border-gray-600 focus:border-indigo-500 focus:ring-indigo-500"
           />
           <.button
@@ -114,7 +137,7 @@ defmodule Project73Web.ProfileUpdateLive do
           >
             Save
           </.button>
-        </.form>
+        </.simple_form>
       </div>
     </div>
     """

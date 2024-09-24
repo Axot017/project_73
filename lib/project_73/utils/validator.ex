@@ -1,22 +1,31 @@
 defmodule Project73.Utils.Validator do
+  use Gettext, backend: Project73Web.Gettext
+
   def new() do
     %{}
   end
 
-  def field(%{} = validator, field, validator_fn) do
+  def field(%{} = validator, field, validator_fns) do
     validator
     |> Map.put_new(field, [])
-    |> Map.update!(field, &[validator_fn | &1])
+    |> Map.update!(field, &(validator_fns ++ &1))
   end
 
-  def field_not_empty(%{} = validator, field) do
-    field(validator, field, fn
-      nil -> {:error, :empty}
-      "" -> {:error, :empty}
-      [] -> {:error, :empty}
+  def string(value) when is_bitstring(value), do: :ok
+  def string(_), do: {:error, :invalid_type}
+
+  def min_size(size) do
+    fn
+      value when is_bitstring(value) and byte_size(value) < size -> {:error, {:too_short, size}}
+      value when is_list(value) and length(value) < size -> {:error, {:too_short, size}}
       _ -> :ok
-    end)
+    end
   end
+
+  def is_not_empty(nil), do: {:error, :empty}
+  def is_not_empty(""), do: {:error, :empty}
+  def is_not_empty([]), do: {:error, :empty}
+  def is_not_empty(_), do: :ok
 
   def apply(%{} = validator, params) do
     result =
@@ -45,5 +54,16 @@ defmodule Project73.Utils.Validator do
       0 -> {:ok, params}
       _ -> {:error, {:validation, result}}
     end
+  end
+
+  def translate({:too_short, size}), do: gettext("Too short, minimum size is %{size}", size: size)
+  def translate(:empty), do: gettext("Can't be empty")
+  def translate(:invalid_type), do: gettext("Invalid type")
+
+  def translate(map) when is_map(map) do
+    map
+    |> Enum.map(fn {field, errors} ->
+      {field, Enum.map(errors, &translate/1)}
+    end)
   end
 end
