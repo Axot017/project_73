@@ -136,6 +136,22 @@ defmodule Project73.Profile.Aggregate do
     end
   end
 
+  def update_payment_account(%__MODULE__{} = self, payment_account_id) do
+    if self.payment_account_id == payment_account_id do
+      {:ok, []}
+    else
+      {:ok,
+       [
+         {:payment_account_updated,
+          %{
+            payment_account_id: payment_account_id,
+            timestamp: DateTime.utc_now(),
+            sequence_number: self.version + 1
+          }}
+       ]}
+    end
+  end
+
   defp add_event_if_changed(events, self, field, new_value, event_type) do
     if Map.get(self, field) != new_value do
       [{event_type, %{field => new_value, timestamp: DateTime.utc_now()}} | events]
@@ -200,6 +216,14 @@ defmodule Project73.Profile.Aggregate do
     %__MODULE__{
       self
       | address: event.address,
+        version: event.sequence_number
+    }
+  end
+
+  defp apply_event(%__MODULE__{} = self, {:payment_account_updated, event}) do
+    %__MODULE__{
+      self
+      | payment_account_id: event.payment_account_id,
         version: event.sequence_number
     }
   end

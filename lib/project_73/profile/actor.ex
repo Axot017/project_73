@@ -56,7 +56,10 @@ defmodule Project73.Profile.Actor do
     with {:ok, events} <- Aggregate.update_profile(state.aggregate, data),
          :ok <- @repository.save_events(state.aggregate.id, events),
          new_state = Aggregate.apply(state.aggregate, events),
-         {:ok, _} <- @payment_provider.create_customer(new_state) do
+         {:ok, payment_account_id} <- @payment_provider.create_customer(new_state),
+         {:ok, events} <- Aggregate.update_payment_account(new_state, payment_account_id),
+         :ok <- @repository.save_events(state.aggregate.id, events),
+         new_state = Aggregate.apply(new_state, events) do
       {:reply, :ok, %__MODULE__{aggregate: new_state}}
     else
       {:error, _} = error ->

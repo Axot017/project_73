@@ -5,7 +5,11 @@ defmodule Project73.Profile.StripeConnector do
     with {:ok, customer} <-
            Stripe.Customer.create(%{
              email: user_data.email,
-             name: user_data.username
+             name: user_data.username,
+             address: user_data.address,
+             metadata: %{
+               "id" => user_data.id
+             }
            }) do
       {:ok, customer.id}
     else
