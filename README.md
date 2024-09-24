@@ -3,7 +3,7 @@
 ## TODO
 
 - [ ] Profile
-    - [ ] Create profile setup page (Username, first and last name, address)
+    - [x] Create profile setup page (Username, first and last name, address)
     - [ ] Create stripe customer after profile setup
     - [ ] Configure onboarding flow to make sure its not possible to create multiple stripe accounts
     - [ ] Allow user to deposit money
