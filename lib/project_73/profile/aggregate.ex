@@ -1,7 +1,5 @@
 defmodule Project73.Profile.Aggregate do
-  alias Project73.Common.Address
   alias Project73.Utils.Validator
-  require Logger
 
   @type t :: %__MODULE__{
           id: String.t(),
@@ -124,11 +122,12 @@ defmodule Project73.Profile.Aggregate do
         {:ok, []}
       else
         versioned_events =
-          Enum.map(events, fn {event, payload} ->
-            {event, Map.put(payload, :sequence_number, self.version + 1)}
+          events
+          |> Enum.with_index(&{&2 + self.version + 1, &1})
+          |> Enum.map(fn {index, {event, payload}} ->
+            {event, Map.put(payload, :sequence_number, index)}
           end)
 
-        Logger.debug("Events: ${inspect(versioned_events)}")
         {:ok, versioned_events}
       end
     else
