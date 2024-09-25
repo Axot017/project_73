@@ -39,6 +39,14 @@ defmodule Project73.Profile.Aggregate do
     %__MODULE__{}
   end
 
+  def needs_setup(%__MODULE__{} = self) do
+    self.username == nil || self.first_name == nil || self.last_name == nil || self.address == nil
+  end
+
+  def needs_payment_account(%__MODULE__{} = self) do
+    self.payment_account_id == nil
+  end
+
   defp create_command_validator(),
     do:
       Validator.new()
