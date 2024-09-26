@@ -28,7 +28,7 @@ defmodule Project73Web.AuthController do
 
         conn
         |> put_flash(:error, "Failed to authenticate.")
-        |> redirect(to: "/")
+        |> redirect(to: ~p"/")
     end
   end
 
@@ -36,38 +36,14 @@ defmodule Project73Web.AuthController do
     conn
     |> delete_session(:current_user)
     |> put_flash(:info, "Logged out.")
-    |> redirect(to: "/auction")
+    |> redirect(to: ~p"/auction")
   end
 
   defp success(conn, user_id) do
-    with {:ok, pid} <- Project73.Profile.Supervisor.get_actor(user_id),
-         profile <- Project73.Profile.Actor.get_profile(pid) do
-      Logger.debug("Profile loaded: #{inspect(profile)}")
-
-      res =
-        conn
-        |> put_flash(:info, "Successfully authenticated.")
-        |> put_session(:current_user, profile)
-        |> configure_session(renew: true)
-
-      if profile.username == nil do
-        res |> redirect(to: ~p"/profile/update")
-      else
-        res |> redirect(to: "/auction")
-      end
-    else
-      {:error, reason} ->
-        Logger.error("Failed to get profile: #{inspect(reason)}")
-
-        conn
-        |> put_flash(:error, "Failed to authenticate.")
-        |> redirect(to: "/")
-    end
-  end
-
-  def refresh(conn, _params) do
-    profile = get_session(conn, :current_user)
-
-    success(conn, profile.id)
+    conn
+    |> put_flash(:info, "Successfully authenticated.")
+    |> put_session(:user_id, user_id)
+    |> configure_session(renew: true)
+    |> redirect(to: ~p"/auction")
   end
 end

@@ -5,7 +5,8 @@ defmodule Project73Web.ProfileUpdateLive do
   use Project73Web, :live_view
 
   def mount(_params, session, socket) do
-    user_id = session["current_user"].id
+    Logger.debug("Socket assigns: #{inspect(session)}")
+    user_id = socket.assigns.current_user.id
     {:ok, pid} = Profile.Supervisor.get_actor(user_id)
     profile = Profile.Actor.get_profile(pid)
     Logger.debug("Profile loaded: #{inspect(profile)}")

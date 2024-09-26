@@ -31,6 +31,10 @@ defmodule Project73.Profile.Actor do
     GenServer.call(pid, {:update_profile, data})
   end
 
+  def create_payment_account(pid) do
+    GenServer.call(pid, {:create_payment_account})
+  end
+
   defp via_tuple(user_id) do
     {:via, Registry, {:profile_registry, user_id}}
   end
@@ -55,11 +59,19 @@ defmodule Project73.Profile.Actor do
   def handle_call({:update_profile, data}, _from, state) do
     with {:ok, events} <- Aggregate.update_profile(state.aggregate, data),
          :ok <- @repository.save_events(state.aggregate.id, events),
-         new_state = Aggregate.apply(state.aggregate, events),
-         {:ok, payment_account_id} <- @payment_provider.create_customer(new_state),
-         {:ok, events} <- Aggregate.update_payment_account(new_state, payment_account_id),
+         new_state = Aggregate.apply(state.aggregate, events) do
+      {:reply, :ok, %__MODULE__{aggregate: new_state}}
+    else
+      {:error, _} = error ->
+        {:reply, error, state}
+    end
+  end
+
+  def handle_call({:create_payment_account}, _from, state) do
+    with {:ok, payment_account_id} <- @payment_provider.create_customer(state.aggregate),
+         {:ok, events} <- Aggregate.update_payment_account(state.aggregate, payment_account_id),
          :ok <- @repository.save_events(state.aggregate.id, events),
-         new_state = Aggregate.apply(new_state, events) do
+         new_state = Aggregate.apply(state.aggregate, events) do
       {:reply, :ok, %__MODULE__{aggregate: new_state}}
     else
       {:error, _} = error ->
