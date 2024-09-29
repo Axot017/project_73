@@ -4,12 +4,9 @@ defmodule Project73Web.ProfileUpdateLive do
   alias Project73.Profile
   use Project73Web, :live_view
 
-  def mount(_params, session, socket) do
-    Logger.debug("Socket assigns: #{inspect(session)}")
-    user_id = socket.assigns.current_user.id
-    {:ok, pid} = Profile.Supervisor.get_actor(user_id)
-    profile = Profile.Actor.get_profile(pid)
+  def mount(_params, %{"current_user" => profile}, socket) do
     Logger.debug("Profile loaded: #{inspect(profile)}")
+    {:ok, pid} = Profile.Supervisor.get_actor(profile.id)
 
     {:ok,
      socket
@@ -57,7 +54,7 @@ defmodule Project73Web.ProfileUpdateLive do
 
     case Profile.Actor.update_profile(socket.assigns.actor_pid, profile_params) do
       :ok ->
-        {:noreply, redirect(socket, to: ~p"/auth/refresh")}
+        {:noreply, redirect(socket, to: ~p"/auction")}
 
       {:error, {:validation, errors}} ->
         translated_errors = Validator.translate(errors)

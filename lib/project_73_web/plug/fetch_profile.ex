@@ -1,5 +1,6 @@
 defmodule Project73Web.Plug.FetchProfile do
   import Plug.Conn
+  require Logger
   alias Project73.Profile
 
   def init(default), do: default
@@ -13,7 +14,11 @@ defmodule Project73Web.Plug.FetchProfile do
         case Profile.Supervisor.get_actor(user_id) do
           {:ok, pid} ->
             user = Profile.Actor.get_profile(pid)
-            assign(conn, :current_user, user)
+            Logger.debug("Assigning current_user: #{inspect(user)}")
+
+            conn
+            |> put_session(:current_user, user)
+            |> assign(:current_user, user)
 
           _ ->
             conn

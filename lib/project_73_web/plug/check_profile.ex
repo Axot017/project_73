@@ -3,6 +3,8 @@ defmodule Project73Web.Plug.CheckProfile do
     router: Project73Web.Router,
     endpoint: Project73Web.Endpoint
 
+  require Logger
+
   import Phoenix.Controller
 
   import Plug.Conn
