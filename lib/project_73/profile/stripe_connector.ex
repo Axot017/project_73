@@ -17,4 +17,21 @@ defmodule Project73.Profile.StripeConnector do
         {:error, error}
     end
   end
+
+  def create_payment_intent(payment_data) do
+    with {:ok, payment_intent} <-
+           Stripe.PaymentIntent.create(%{
+             amount: payment_data.amount,
+             currency: "PLN",
+             customer: payment_data.customer_id,
+             metadata: %{
+               "id" => payment_data.user_id
+             }
+           }) do
+      {:ok, payment_intent}
+    else
+      {:error, error} ->
+        {:error, error}
+    end
+  end
 end

@@ -41,6 +41,7 @@ defmodule Project73Web.Router do
     pipe_through :browser
 
     live "/update", ProfileUpdateLive
+    live "/wallet", WalletLive
   end
 
   # Other scopes may use custom stacks.

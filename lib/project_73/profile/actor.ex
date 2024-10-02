@@ -35,6 +35,10 @@ defmodule Project73.Profile.Actor do
     GenServer.call(pid, {:create_payment_account})
   end
 
+  def request_deposit(pid, amount) do
+    GenServer.call(pid, {:request_deposit, amount})
+  end
+
   defp via_tuple(user_id) do
     {:via, Registry, {:profile_registry, user_id}}
   end
@@ -81,6 +85,9 @@ defmodule Project73.Profile.Actor do
 
   def handle_call(:get_profile, _from, state) do
     {:reply, state.aggregate, state}
+  end
+
+  def handle_call({:request_deposit, amount}, _from, state) do
   end
 
   def handle_cast({:load, id}, state) do
