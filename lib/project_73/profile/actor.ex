@@ -88,6 +88,14 @@ defmodule Project73.Profile.Actor do
   end
 
   def handle_call({:request_deposit, amount}, _from, state) do
+    result =
+      @payment_provider.create_payment_intent(%{
+        amount: Decimal.to_integer(amount),
+        customer_id: state.aggregate.payment_account_id,
+        user_id: state.aggregate.id
+      })
+
+    {:reply, result, state}
   end
 
   def handle_cast({:load, id}, state) do

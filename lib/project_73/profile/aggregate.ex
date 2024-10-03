@@ -192,6 +192,7 @@ defmodule Project73.Profile.Aggregate do
       email: event.email,
       avatar_url: nil,
       created_at: event.timestamp,
+      wallet_balance: Decimal.new(0),
       version: event.sequence_number
     }
   end
