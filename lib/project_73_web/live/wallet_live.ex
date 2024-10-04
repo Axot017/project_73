@@ -10,7 +10,7 @@ defmodule Project73Web.WalletLive do
     {:ok,
      socket
      |> assign(
-       profile: profile,
+       current_user: profile,
        actor_pid: pid
      )}
   end
@@ -26,7 +26,7 @@ defmodule Project73Web.WalletLive do
   def render(assigns) do
     ~H"""
     <div>
-      <%= Decimal.to_string(@profile.wallet_balance) %>
+      <%= Decimal.to_string(@current_user.wallet_balance) %>
     </div>
     <.button phx-click="deposit">Deposit</.button>
     """

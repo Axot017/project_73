@@ -13,8 +13,8 @@
           </div>
         </div>
         <div class="flex items-center">
-          <%= if @profile != nil do %>
-            <span class="text-gray-300 mr-4"><%= @profile.username %></span>
+          <%= if @current_user do %>
+            <span class="text-gray-300 mr-4"><%= @current_user.username %></span>
             <.redirect_button
               href={~p"/auth/logout"}
               method="delete"
