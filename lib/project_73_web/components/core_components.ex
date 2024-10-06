@@ -93,6 +93,48 @@ defmodule Project73Web.CoreComponents do
     """
   end
 
+  attr :id, :string, required: true
+  attr :show, :boolean, default: false
+  slot :inner_block, required: true
+
+  def not_cancellable_modal(assigns) do
+    ~H"""
+    <div
+      id={@id}
+      phx-mounted={@show && show_modal(@id)}
+      phx-remove={hide_modal(@id)}
+      class="relative z-50 hidden"
+    >
+      <div
+        id={"#{@id}-bg"}
+        class="bg-gray-800/70 fixed inset-0 transition-opacity"
+        aria-hidden="true"
+      />
+      <div
+        class="fixed inset-0 overflow-y-auto"
+        aria-labelledby={"#{@id}-title"}
+        aria-describedby={"#{@id}-description"}
+        role="dialog"
+        aria-modal="true"
+        tabindex="0"
+      >
+        <div class="flex min-h-full items-center justify-center">
+          <div class="w-full max-w-3xl p-4 sm:p-6 lg:py-8">
+            <div
+              id={"#{@id}-container"}
+              class="shadow-zinc-700/10 ring-zinc-700/10 relative hidden rounded-2xl bg-gray-800 p-14 shadow-lg ring-1 transition"
+            >
+              <div id={"#{@id}-content"}>
+                <%= render_slot(@inner_block) %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
   @doc """
   Renders flash notices.
 

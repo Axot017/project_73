@@ -30,27 +30,31 @@ defmodule Project73Web.WalletLive do
      |> assign(amount_to_deposit: deposit_data.amount)}
   end
 
+  def handle_event("cancel_deposit", _params, socket) do
+    {:noreply, socket |> assign(amount_to_deposit: nil)}
+  end
+
   def render(assigns) do
     ~H"""
     <script>
       window.addEventListener("phx:start_deposit", (event) => {
-      const stripe = Stripe("<%= @stripe_public_key %>");
+        const stripe = Stripe("<%= @stripe_public_key %>");
 
-      const elements = stripe.elements({ clientSecret: event.detail.client_secret, appearance: { theme: "night" } });
-      const paymentElement = elements.create("payment");
-      paymentElement.mount("#payment-element");
-
+        const elements = stripe.elements({ clientSecret: event.detail.client_secret, appearance: { theme: "night" } });
+        const paymentElement = elements.create("payment");
+        paymentElement.mount("#payment-element");
       });
     </script>
     <div>
       <%= Decimal.to_string(@current_user.wallet_balance) %>
     </div>
-    <.modal :if={@amount_to_deposit} id="payment-modal" show>
+    <.not_cancellable_modal :if={@amount_to_deposit} id="payment-modal" show>
       <.simple_form action="" for={%{}} id="payment-form">
         <div id="payment-element"></div>
         <.button type="submit">Submit Payment</.button>
+        <.button type="button" phx-click="cancel_deposit">Cancel</.button>
       </.simple_form>
-    </.modal>
+    </.not_cancellable_modal>
     <.button phx-click="deposit">Deposit</.button>
     """
   end
