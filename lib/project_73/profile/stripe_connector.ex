@@ -30,10 +30,10 @@ defmodule Project73.Profile.StripeConnector do
            Stripe.PaymentIntent.create(%{
              amount: amount,
              currency: "PLN",
-             payment_method_options: %{
-               p24: %{}
-             },
              customer: customer_id,
+             automatic_payment_methods: %{
+               enabled: true
+             },
              metadata: %{
                "id" => user_id
              }

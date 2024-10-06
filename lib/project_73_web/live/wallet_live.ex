@@ -14,6 +14,7 @@ defmodule Project73Web.WalletLive do
      |> assign(
        current_user: profile,
        actor_pid: pid,
+       amount_to_deposit: nil,
        stripe_public_key: @stripe_public_key
      )}
   end
@@ -25,32 +26,30 @@ defmodule Project73Web.WalletLive do
 
     {:noreply,
      socket
-     |> push_event("start_deposit", %{client_secret: deposit_data.client_secret})}
+     |> push_event("start_deposit", %{client_secret: deposit_data.client_secret})
+     |> assign(amount_to_deposit: deposit_data.amount)}
   end
 
   def render(assigns) do
     ~H"""
     <script>
       window.addEventListener("phx:start_deposit", (event) => {
-        console.log("phx:start_deposit", event.detail);
-        const stripe = Stripe("<%= @stripe_public_key %>");
-        const clientSecret = event.detail.client_secret;
-        
-        stripe.confirmPayment({
-          clientSecret: clientSecret,
-          confirmParams: {
-            return_url: "http://localhost:4000",
-          }
-        }).then((result) => {
-            console.log(result);
-        });
+      const stripe = Stripe("<%= @stripe_public_key %>");
+
+      const elements = stripe.elements({ clientSecret: event.detail.client_secret, appearance: { theme: "night" } });
+      const paymentElement = elements.create("payment");
+      paymentElement.mount("#payment-element");
+
       });
     </script>
     <div>
       <%= Decimal.to_string(@current_user.wallet_balance) %>
     </div>
-    <.modal id="test-modal" show={true}>
-      Test modal
+    <.modal :if={@amount_to_deposit} id="payment-modal" show>
+      <.simple_form action="" for={%{}} id="payment-form">
+        <div id="payment-element"></div>
+        <.button type="submit">Submit Payment</.button>
+      </.simple_form>
     </.modal>
     <.button phx-click="deposit">Deposit</.button>
     """
