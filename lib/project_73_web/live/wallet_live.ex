@@ -43,13 +43,30 @@ defmodule Project73Web.WalletLive do
         const elements = stripe.elements({ clientSecret: event.detail.client_secret, appearance: { theme: "night" } });
         const paymentElement = elements.create("payment");
         paymentElement.mount("#payment-element");
+
+        const form = document.getElementById("payment-form");
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const { error, paymentMethod } = await stripe.confirmPayment({
+            elements,
+            confirmParams: {
+              return_url: "http://localhost:4000/auction",
+            },
+          });
+
+          if (error) {
+            console.error(error);
+          } else {
+            console.log(paymentMethod);
+          }
+        });
       });
     </script>
     <div>
       <%= Decimal.to_string(@current_user.wallet_balance) %>
     </div>
     <.not_cancellable_modal :if={@amount_to_deposit} id="payment-modal" show>
-      <.simple_form action="" for={%{}} id="payment-form">
+      <.simple_form action="submit" for={%{}} id="payment-form">
         <div id="payment-element"></div>
         <.button type="submit">Submit Payment</.button>
         <.button type="button" phx-click="cancel_deposit">Cancel</.button>
