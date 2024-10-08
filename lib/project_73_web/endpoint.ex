@@ -41,6 +41,11 @@ defmodule Project73Web.Endpoint do
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
+  plug Stripe.WebhookPlug,
+    at: "/api/v1/webhook/stripe",
+    handler: Project73Web.StripeHandler,
+    secret: System.get_env("STRIPE_WEBHOOK_SECRET")
+
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],

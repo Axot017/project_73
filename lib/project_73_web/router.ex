@@ -21,7 +21,7 @@ defmodule Project73Web.Router do
   scope "/api", Project73Web do
     pipe_through :api
 
-    scope "/v1", Project73Web do
+    scope "/v1" do
     end
   end
 
