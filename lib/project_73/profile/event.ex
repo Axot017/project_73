@@ -1,10 +1,12 @@
 defmodule Project73.Profile.Event do
+  alias Project73.Profile.Event
+
   @type t ::
-          Created.t()
-          | FirstNameChanged.t()
-          | LastNameChanged.t()
-          | AddressChanged.t()
-          | UsernameChanged.t()
+          Event.Created.t()
+          | Event.FirstNameChanged.t()
+          | Event.LastNameChanged.t()
+          | Event.AddressChanged.t()
+          | Event.UsernameChanged.t()
 
   defmodule Created do
     @type t() :: %__MODULE__{
