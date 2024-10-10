@@ -1,5 +1,6 @@
 defmodule Project73.Profile.Aggregate do
-  alias Project73.Utils.Validator
+  alias Project73.Profile.Event
+  alias Project73.Profile.Command
 
   @type t :: %__MODULE__{
           id: String.t(),
@@ -8,7 +9,7 @@ defmodule Project73.Profile.Aggregate do
           username: String.t(),
           first_name: String.t(),
           last_name: String.t(),
-          address: Project73.Common.Address.t(),
+          address: Project73.Shared.Address.t(),
           avatar_url: String.t(),
           payment_account_id: String.t(),
           wallet_balance: Decimal.t(),
@@ -39,6 +40,121 @@ defmodule Project73.Profile.Aggregate do
     %__MODULE__{}
   end
 
+  def handle_command(%__MODULE__{} = self, %Command.Create{} = cmd) do
+    case self.created_at do
+      nil ->
+        {:ok,
+         [
+           %Event.Created{
+             id: cmd.id,
+             provider: cmd.provider,
+             email: cmd.email,
+             timestamp: DateTime.utc_now(),
+             sequence_number: 1
+           }
+         ]}
+
+      _ ->
+        {:error, :already_created}
+    end
+  end
+
+  def handle_command(%__MODULE__{} = self, %Command.UpdatePaymentAccount{} = cmd) do
+    if self.payment_account_id == nil do
+      {:ok,
+       [
+         %Event.PaymentAccountUpdated{
+           payment_account_id: cmd.payment_account_id,
+           timestamp: DateTime.utc_now(),
+           sequence_number: self.version + 1
+         }
+       ]}
+    else
+      {:error, :already_created}
+    end
+  end
+
+  def handle_command(%__MODULE__{} = self, %Command.UpdateProfile{} = cmd) do
+    events =
+      change_username(self, cmd.username) ++
+        change_first_name(self, cmd.first_name) ++
+        change_last_name(self, cmd.last_name) ++
+        change_address(self, cmd.address)
+
+    versioned_events =
+      events
+      |> Enum.with_index(self.version + 1)
+      |> Enum.map(fn {event, index} ->
+        Map.put(event, :sequence_number, index)
+      end)
+
+    {:ok, versioned_events}
+  end
+
+  defp change_username(%__MODULE__{} = self, username) do
+    case self.username == username do
+      true ->
+        []
+
+      false ->
+        [
+          %Event.UsernameChanged{
+            username: username,
+            timestamp: DateTime.utc_now(),
+            sequence_number: self.version + 1
+          }
+        ]
+    end
+  end
+
+  defp change_first_name(%__MODULE__{} = self, first_name) do
+    case self.first_name == first_name do
+      true ->
+        []
+
+      false ->
+        [
+          %Event.FirstNameChanged{
+            first_name: first_name,
+            timestamp: DateTime.utc_now(),
+            sequence_number: self.version + 1
+          }
+        ]
+    end
+  end
+
+  defp change_last_name(%__MODULE__{} = self, last_name) do
+    case self.last_name == last_name do
+      true ->
+        []
+
+      false ->
+        [
+          %Event.LastNameChanged{
+            last_name: last_name,
+            timestamp: DateTime.utc_now(),
+            sequence_number: self.version + 1
+          }
+        ]
+    end
+  end
+
+  defp change_address(%__MODULE__{} = self, address) do
+    case self.address == address do
+      true ->
+        []
+
+      false ->
+        [
+          %Event.AddressChanged{
+            address: address,
+            timestamp: DateTime.utc_now(),
+            sequence_number: self.version + 1
+          }
+        ]
+    end
+  end
+
   def needs_setup(%__MODULE__{} = self) do
     self.username == nil || self.first_name == nil || self.last_name == nil || self.address == nil
   end
@@ -47,145 +163,11 @@ defmodule Project73.Profile.Aggregate do
     self.payment_account_id == nil
   end
 
-  defp create_command_validator(),
-    do:
-      Validator.new()
-      |> Validator.field(:id, [&Validator.string/1, &Validator.is_not_empty/1])
-      |> Validator.field(:provider, [&Validator.string/1, &Validator.is_not_empty/1])
-      |> Validator.field(:email, [&Validator.string/1, &Validator.is_not_empty/1])
-
-  def create(%__MODULE__{} = self, data) do
-    case Validator.apply(create_command_validator(), data) do
-      {:ok,
-       %{
-         id: id,
-         provider: provider,
-         email: email
-       }} ->
-        create(self, id, provider, email)
-
-      error ->
-        error
-    end
-  end
-
-  defp create(%__MODULE__{} = self, id, provider, email) do
-    case self.created_at do
-      nil ->
-        {:ok,
-         [
-           {:profile_created,
-            %{
-              id: id,
-              provider: provider,
-              email: email,
-              timestamp: DateTime.utc_now(),
-              sequence_number: 1
-            }}
-         ]}
-
-      _ ->
-        {:error, :already_created}
-    end
-  end
-
-  defp update_command_validator(),
-    do:
-      Validator.new()
-      |> Validator.field(:username, [&Validator.string/1, Validator.min_size(3)])
-      |> Validator.field(:first_name, [&Validator.string/1, &Validator.is_not_empty/1])
-      |> Validator.field(:last_name, [&Validator.string/1, &Validator.is_not_empty/1])
-      |> Validator.field(:country, [&Validator.string/1, &Validator.is_not_empty/1])
-      |> Validator.field(:city, [&Validator.string/1, &Validator.is_not_empty/1])
-      |> Validator.field(:postal_code, [&Validator.string/1, &Validator.is_not_empty/1])
-      |> Validator.field(:address_line1, [&Validator.string/1, &Validator.is_not_empty/1])
-      |> Validator.field(:address_line2, [&Validator.string/1])
-
-  def update_profile(%__MODULE__{} = self, data) do
-    with {:ok,
-          %{
-            username: username,
-            first_name: first_name,
-            last_name: last_name,
-            country: country,
-            city: city,
-            postal_code: postal_code,
-            address_line1: address_line1,
-            address_line2: address_line2
-          }} <- Validator.apply(update_command_validator(), data) do
-      events =
-        []
-        |> add_event_if_changed(self, :username, username, :username_changed)
-        |> add_event_if_changed(self, :first_name, first_name, :first_name_changed)
-        |> add_event_if_changed(self, :last_name, last_name, :last_name_changed)
-        |> add_address_changed_event(self, %{
-          country: country,
-          city: city,
-          postal_code: postal_code,
-          line1: address_line1,
-          line2: address_line2
-        })
-
-      if events == [] do
-        {:ok, []}
-      else
-        versioned_events =
-          events
-          |> Enum.with_index(&{&2 + self.version + 1, &1})
-          |> Enum.map(fn {index, {event, payload}} ->
-            {event, Map.put(payload, :sequence_number, index)}
-          end)
-
-        {:ok, versioned_events}
-      end
-    else
-      error ->
-        error
-    end
-  end
-
-  def update_payment_account(%__MODULE__{} = self, payment_account_id) do
-    if self.payment_account_id == payment_account_id do
-      {:ok, []}
-    else
-      {:ok,
-       [
-         {:payment_account_updated,
-          %{
-            payment_account_id: payment_account_id,
-            timestamp: DateTime.utc_now(),
-            sequence_number: self.version + 1
-          }}
-       ]}
-    end
-  end
-
-  defp add_event_if_changed(events, self, field, new_value, event_type) do
-    if Map.get(self, field) != new_value do
-      [{event_type, %{field => new_value, timestamp: DateTime.utc_now()}} | events]
-    else
-      events
-    end
-  end
-
-  defp add_address_changed_event(events, self, new_address) do
-    current_address = Map.get(self, :address, %{})
-
-    if current_address !== new_address do
-      [
-        {:address_changed, %{address: new_address, timestamp: DateTime.utc_now()}}
-        | events
-      ]
-    else
-      events
-    end
-  end
-
   def apply(self, events) do
     Enum.reduce(events, self, &apply_event(&2, &1))
   end
 
-  defp apply_event(%__MODULE__{} = _self, {:profile_created, event}) do
+  defp apply_event(%__MODULE__{} = _self, %Event.Created{} = event) do
     %__MODULE__{
       id: event.id,
       provider: event.provider,
@@ -197,7 +179,7 @@ defmodule Project73.Profile.Aggregate do
     }
   end
 
-  defp apply_event(%__MODULE__{} = self, {:username_changed, event}) do
+  defp apply_event(%__MODULE__{} = self, %Event.UsernameChanged{} = event) do
     %__MODULE__{
       self
       | username: event.username,
@@ -205,7 +187,7 @@ defmodule Project73.Profile.Aggregate do
     }
   end
 
-  defp apply_event(%__MODULE__{} = self, {:first_name_changed, event}) do
+  defp apply_event(%__MODULE__{} = self, %Event.FirstNameChanged{} = event) do
     %__MODULE__{
       self
       | first_name: event.first_name,
@@ -213,7 +195,7 @@ defmodule Project73.Profile.Aggregate do
     }
   end
 
-  defp apply_event(%__MODULE__{} = self, {:last_name_changed, event}) do
+  defp apply_event(%__MODULE__{} = self, %Event.LastNameChanged{} = event) do
     %__MODULE__{
       self
       | last_name: event.last_name,
@@ -221,7 +203,7 @@ defmodule Project73.Profile.Aggregate do
     }
   end
 
-  defp apply_event(%__MODULE__{} = self, {:address_changed, event}) do
+  defp apply_event(%__MODULE__{} = self, %Event.AddressChanged{} = event) do
     %__MODULE__{
       self
       | address: event.address,
@@ -229,7 +211,7 @@ defmodule Project73.Profile.Aggregate do
     }
   end
 
-  defp apply_event(%__MODULE__{} = self, {:payment_account_updated, event}) do
+  defp apply_event(%__MODULE__{} = self, %Event.PaymentAccountUpdated{} = event) do
     %__MODULE__{
       self
       | payment_account_id: event.payment_account_id,

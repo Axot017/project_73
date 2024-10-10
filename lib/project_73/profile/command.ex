@@ -16,9 +16,11 @@ defmodule Project73.Profile.Command do
     defstruct [:id, :provider, :email]
   end
 
-  defmodule CreatePaymentAccount do
-    @type t() :: %__MODULE__{}
-    defstruct []
+  defmodule UpdatePaymentAccount do
+    @type t() :: %__MODULE__{
+            payment_account_id: String.t()
+          }
+    defstruct [:payment_account_id]
   end
 
   defmodule RequestDeposit do

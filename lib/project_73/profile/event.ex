@@ -57,4 +57,13 @@ defmodule Project73.Profile.Event do
           }
     defstruct [:username, :timestamp, :sequence_number]
   end
+
+  defmodule PaymentAccountUpdated do
+    @type t() :: %__MODULE__{
+            payment_account_id: String.t(),
+            timestamp: DateTime.t(),
+            sequence_number: integer()
+          }
+    defstruct [:payment_account_id, :timestamp, :sequence_number]
+  end
 end
