@@ -74,7 +74,7 @@ defmodule Project73.Profile.Aggregate do
     end
   end
 
-  def handle_command(%__MODULE__{} = self, %Command.UpdateProfile{} = cmd) do
+  def handle_command(%__MODULE__{} = self, %Command.Update{} = cmd) do
     events =
       change_username(self, cmd.username) ++
         change_first_name(self, cmd.first_name) ++

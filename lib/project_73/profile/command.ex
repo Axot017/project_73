@@ -5,7 +5,7 @@ defmodule Project73.Profile.Command do
           Command.Create.t()
           | Command.CreatePaymentAccount.t()
           | Command.RequestDeposit.t()
-          | Command.UpdateProfile.t()
+          | Command.Update.t()
 
   defmodule Create do
     @type t() :: %__MODULE__{
@@ -30,7 +30,7 @@ defmodule Project73.Profile.Command do
     defstruct [:amount]
   end
 
-  defmodule UpdateProfile do
+  defmodule Update do
     alias Project73.Shared.Address
 
     @type t() :: %__MODULE__{

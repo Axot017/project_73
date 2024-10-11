@@ -1,5 +1,7 @@
 defmodule Project73Web.ProfileUpdateLive do
   require Logger
+  alias Project73.Shared.Address
+  alias Project73.Profile.Command
   alias Project73.Utils.Validator
   alias Project73.Profile
   use Project73Web, :live_view
@@ -41,18 +43,20 @@ defmodule Project73Web.ProfileUpdateLive do
         } = profile_form,
         socket
       ) do
-    profile_params = %{
+    cmd = %Command.Update{
       username: username,
       first_name: first_name,
       last_name: last_name,
-      country: country,
-      city: city,
-      address_line1: address_line1,
-      address_line2: address_line2,
-      postal_code: postal_code
+      address: %Address{
+        country: country,
+        city: city,
+        postal_code: postal_code,
+        line1: address_line1,
+        line2: address_line2
+      }
     }
 
-    case Profile.Actor.update_profile(socket.assigns.actor_pid, profile_params) do
+    case Profile.Actor.update_profile(socket.assigns.actor_pid, cmd) do
       :ok ->
         {:noreply, redirect(socket, to: ~p"/auction")}
 

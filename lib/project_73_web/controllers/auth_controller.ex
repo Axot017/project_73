@@ -1,4 +1,5 @@
 defmodule Project73Web.AuthController do
+  alias Project73.Profile.Command
   require Logger
   use Project73Web, :controller
   plug Ueberauth
@@ -17,7 +18,12 @@ defmodule Project73Web.AuthController do
     Logger.debug("Auth details: #{inspect(auth)}")
 
     with {:ok, pid} <- Project73.Profile.Supervisor.get_actor(provider_id),
-         :ok <- Project73.Profile.Actor.create(pid, provider_id, provider, email) do
+         :ok <-
+           Project73.Profile.Actor.create(pid, %Command.Create{
+             id: provider_id,
+             provider: provider,
+             email: email
+           }) do
       success(conn, provider_id)
     else
       {:error, :already_created} ->

@@ -1,5 +1,6 @@
 defmodule Project73.Profile.Actor do
   use GenServer
+  alias Project73.Profile.Command
   alias Project73.Profile.Aggregate
   require Logger
 
@@ -19,16 +20,12 @@ defmodule Project73.Profile.Actor do
     GenServer.start_link(__MODULE__, auction_id, name: via_tuple(auction_id))
   end
 
-  def create(pid, id, provider, email) do
-    GenServer.call(pid, {:create, id, provider, email})
+  def create(pid, %Command.Create{} = cmd) do
+    GenServer.call(pid, {:create, cmd})
   end
 
-  def get_profile(pid) do
-    GenServer.call(pid, :get_profile)
-  end
-
-  def update_profile(pid, data) do
-    GenServer.call(pid, {:update_profile, data})
+  def update_profile(pid, %Command.Update{} = cmd) do
+    GenServer.call(pid, {:update, cmd})
   end
 
   def create_payment_account(pid) do
@@ -39,19 +36,19 @@ defmodule Project73.Profile.Actor do
     GenServer.call(pid, {:request_deposit, amount})
   end
 
+  def get_profile(pid) do
+    GenServer.call(pid, :get_profile)
+  end
+
   defp via_tuple(user_id) do
     {:via, Registry, {:profile_registry, user_id}}
   end
 
-  def handle_call({:create, id, provider, email}, _from, state) do
+  def handle_call({:create, %Command.Create{} = cmd}, _from, state) do
     with {:ok, events} <-
-           Aggregate.create(state.aggregate, %{
-             id: id,
-             provider: provider,
-             email: email
-           }),
+           Aggregate.handle_command(state.aggregate, cmd),
          _ <- Logger.debug("Events: #{inspect(events)}"),
-         :ok <- @repository.save_events(id, events) do
+         :ok <- @repository.save_events(cmd.id, events) do
       new_state = Aggregate.apply(state.aggregate, events)
       {:reply, :ok, %__MODULE__{aggregate: new_state}}
     else
@@ -60,8 +57,8 @@ defmodule Project73.Profile.Actor do
     end
   end
 
-  def handle_call({:update_profile, data}, _from, state) do
-    with {:ok, events} <- Aggregate.update_profile(state.aggregate, data),
+  def handle_call({:update, %Command.Update{} = cmd}, _from, state) do
+    with {:ok, events} <- Aggregate.handle_command(state.aggregate, cmd),
          :ok <- @repository.save_events(state.aggregate.id, events),
          new_state = Aggregate.apply(state.aggregate, events) do
       {:reply, :ok, %__MODULE__{aggregate: new_state}}
@@ -73,9 +70,12 @@ defmodule Project73.Profile.Actor do
 
   def handle_call({:create_payment_account}, _from, state) do
     with {:ok, payment_account_id} <- @payment_provider.create_customer(state.aggregate),
-         {:ok, events} <- Aggregate.update_payment_account(state.aggregate, payment_account_id),
-         :ok <- @repository.save_events(state.aggregate.id, events),
-         new_state = Aggregate.apply(state.aggregate, events) do
+         {:ok, events} <-
+           Aggregate.handle_command(state.aggregate, %Command.UpdatePaymentAccount{
+             payment_account_id: payment_account_id
+           }),
+         :ok <- @repository.save_events(state.aggregate.id, events) do
+      new_state = Aggregate.apply(state.aggregate, events)
       {:reply, :ok, %__MODULE__{aggregate: new_state}}
     else
       {:error, _} = error ->
