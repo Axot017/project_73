@@ -9,7 +9,7 @@ defmodule Project73.Profile.MongoRepository do
 
   def save_events(id, events) do
     first_event = hd(events)
-    {_, %{sequence_number: version}} = first_event
+    %{sequence_number: version} = first_event
 
     events =
       events
