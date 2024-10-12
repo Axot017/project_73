@@ -1,9 +1,10 @@
 defmodule Project73.Profile.Command do
+  alias Project73.Profile.Command.Create
   alias Project73.Profile.Command
 
   @type t() ::
           Command.Create.t()
-          | Command.CreatePaymentAccount.t()
+          | Command.UpdatePaymentAccount.t()
           | Command.RequestDeposit.t()
           | Command.Update.t()
 
