@@ -26,7 +26,7 @@ defmodule Project73.Utils.ValidatedStruct do
 
     type_def = generate_types(name, fields)
 
-    validation_fn = generate_validation_function(name)
+    validation_fn = generate_validation_function(name, fields)
 
     quote =
       quote do
@@ -79,23 +79,123 @@ defmodule Project73.Utils.ValidatedStruct do
   defp convert_type(atom) when is_atom(atom), do: raise("Unknown type: #{inspect(atom)}")
   defp convert_type(other), do: quote(do: unquote(other))
 
-  defp generate_validation_function(struct_name) do
-    validate_fn_name =
-      struct_name
-      |> get_last_submodule()
-      |> Macro.underscore()
-      |> (&"validate_#{&1}").()
-      |> String.to_atom()
-
+  defp generate_validation_function(struct_name, fields) do
     quote do
-      def unquote(validate_fn_name)(%unquote(struct_name){} = struct) do
-        IO.inspect(struct, label: "Validating struct")
-        :ok
+      def validate(%unquote(struct_name){} = struct) do
+        result =
+          Project73.Utils.ValidatedStruct.Validator.validate_struct(
+            struct,
+            unquote(generate_field_validators(fields))
+          )
+
+        case result do
+          :ok -> {:ok, struct}
+          {:error, errors} -> {:error, errors}
+        end
       end
     end
   end
 
-  defp get_last_submodule(name) do
-    name |> Macro.to_string() |> String.split(".") |> List.last()
+  defp generate_field_validators(fields) do
+    for {name, type, _opts} <- fields do
+      case type do
+        @any_type ->
+          quote do
+            {unquote(name), []}
+          end
+
+        @string_type ->
+          quote do
+            {unquote(name), [&Project73.Utils.ValidatedStruct.Validator.string/1]}
+          end
+
+        _ ->
+          quote do
+            {unquote(name), []}
+          end
+      end
+    end
+  end
+
+  defmodule Validator do
+    def validate_struct(struct, field_validators) do
+      field_validators
+      |> Enum.reduce(:ok, fn {field, validators}, acc ->
+        case {acc, validate_field(struct, field, validators)} do
+          {:ok, :ok} -> :ok
+          {{:error, errors}, :ok} -> {:error, errors}
+          {:ok, {:error, errors}} -> {:error, errors}
+          {{:error, errors1}, {:error, errors2}} -> {:error, errors1 ++ errors2}
+        end
+      end)
+    end
+
+    def validate_field(struct, field, validators) do
+      result =
+        case Map.get(struct, field) do
+          nil ->
+            {:error, :missing_field}
+
+          value ->
+            validators
+            |> Enum.reduce(:ok, fn validator, acc ->
+              case {acc, validator.(value)} do
+                {:ok, :ok} -> :ok
+                {{:error, errors}, :ok} -> {:error, errors}
+                {:ok, {:error, error}} -> {:error, [error]}
+                {{:error, errors}, {:error, error}} -> {:error, errors ++ [error]}
+              end
+            end)
+        end
+
+      case result do
+        :ok -> :ok
+        {:error, errors} -> {:error, {:field, field, errors}}
+      end
+    end
+
+    def validate_list(list, validators) do
+      list
+      |> Enum.with_index(0)
+      |> Enum.reduce(:ok, fn {value, index}, acc ->
+        result =
+          validators
+          |> Enum.reduce(:ok, fn validator, acc ->
+            case {acc, validator.(value)} do
+              {:ok, :ok} -> :ok
+              {{:error, errors}, :ok} -> {:error, errors}
+              {:ok, {:error, errors}} -> {:error, errors}
+              {{:error, errors1}, {:error, errors2}} -> {:error, errors1 ++ errors2}
+            end
+          end)
+
+        case result do
+          :ok -> :ok
+          {:error, errors} -> {:error, {:index, index, errors}}
+        end
+
+        case {acc, result} do
+          {:ok, :ok} -> :ok
+          {{:error, errors}, :ok} -> {:error, errors}
+          {:ok, {:error, errors}} -> {:error, errors}
+          {{:error, errors1}, {:error, errors2}} -> {:error, errors1 ++ errors2}
+        end
+      end)
+    end
+
+    def string(value) when is_bitstring(value), do: :ok
+    def string(_), do: {:error, :not_a_string}
+
+    def integer(value) when is_integer(value), do: :ok
+    def integer(_), do: {:error, :not_an_integer}
+
+    def float(value) when is_float(value), do: :ok
+    def float(_), do: {:error, :not_a_float}
+
+    def number(value) when is_number(value), do: :ok
+    def number(_), do: {:error, :not_a_number}
+
+    def boolean(value) when value in [true, false], do: :ok
+    def boolean(_), do: {:error, :not_a_boolean}
   end
 end
