@@ -97,7 +97,7 @@ defmodule Project73.Utils.ValidatedStruct do
   end
 
   defp generate_field_validators(fields) do
-    for {name, type, _opts} <- fields do
+    for {name, type, opts} <- fields do
       case type do
         @any_type ->
           quote do
@@ -109,10 +109,66 @@ defmodule Project73.Utils.ValidatedStruct do
             {unquote(name), [&Project73.Utils.ValidatedStruct.Validator.string/1]}
           end
 
+        @integer_type ->
+          quote do
+            {unquote(name),
+             [
+               &Project73.Utils.ValidatedStruct.Validator.integer/1
+             ] ++ unquote(generate_validators(opts))}
+          end
+
         _ ->
           quote do
             {unquote(name), []}
           end
+      end
+    end
+  end
+
+  defp generate_validators(opts) do
+    for {key, value} <- opts do
+      get_validator_fn(key, value)
+    end
+  end
+
+  defp get_validator_fn(:gt, min) do
+    quote do
+      fn value -> Project73.Utils.ValidatedStruct.Validator.greater_than(value, unquote(min)) end
+    end
+  end
+
+  defp get_validator_fn(:gte, min) do
+    quote do
+      fn value ->
+        Project73.Utils.ValidatedStruct.Validator.greater_than_or_equal(value, unquote(min))
+      end
+    end
+  end
+
+  defp get_validator_fn(:lt, max) do
+    quote do
+      fn value -> Project73.Utils.ValidatedStruct.Validator.less_than(value, unquote(max)) end
+    end
+  end
+
+  defp get_validator_fn(:lte, max) do
+    quote do
+      fn value ->
+        Project73.Utils.ValidatedStruct.Validator.less_than_or_equal(value, unquote(max))
+      end
+    end
+  end
+
+  defp get_validator_fn(:eq, expected) do
+    quote do
+      fn value -> Project73.Utils.ValidatedStruct.Validator.equal(value, unquote(expected)) end
+    end
+  end
+
+  defp get_validator_fn(:neq, expected) do
+    quote do
+      fn value ->
+        Project73.Utils.ValidatedStruct.Validator.not_equal(value, unquote(expected))
       end
     end
   end
@@ -197,5 +253,32 @@ defmodule Project73.Utils.ValidatedStruct do
 
     def boolean(value) when value in [true, false], do: :ok
     def boolean(_), do: {:error, :not_a_boolean}
+
+    def list(value) when is_list(value), do: :ok
+    def list(_), do: {:error, :not_a_list}
+
+    def map(value) when is_map(value), do: :ok
+    def map(_), do: {:error, :not_a_map}
+
+    def atom(value) when is_atom(value), do: :ok
+    def atom(_), do: {:error, :not_an_atom}
+
+    def less_than(value, max) when value < max, do: :ok
+    def less_than(_, max), do: {:error, {:greater_than_max, max}}
+
+    def less_than_or_equal(value, max) when value <= max, do: :ok
+    def less_than_or_equal(_, max), do: {:error, {:greater_than_max, max}}
+
+    def greater_than(value, min) when value > min, do: :ok
+    def greater_than(_, min), do: {:error, {:less_than_min, min}}
+
+    def greater_than_or_equal(value, min) when value >= min, do: :ok
+    def greater_than_or_equal(_, min), do: {:error, {:less_than_min, min}}
+
+    def equal(value, expected) when value == expected, do: :ok
+    def equal(_, _), do: {:error, :not_equal}
+
+    def not_equal(value, expected) when value != expected, do: :ok
+    def not_equal(_, _), do: {:error, :equal}
   end
 end

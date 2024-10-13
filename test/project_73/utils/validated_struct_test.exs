@@ -4,7 +4,7 @@ defmodule Project73.Utils.ValidatedStructTest do
 
   validated_struct TestStruct do
     field :name
-    field :age, :integer
+    field :age, :integer, lt: 100
     field :city, :string, default: "New York"
   end
 
@@ -47,7 +47,7 @@ defmodule Project73.Utils.ValidatedStructTest do
 
     test "should validate if field has correct type" do
       assert {:error, {:field, :city, [:not_a_string]}} =
-               TestStruct.validate(%TestStruct{city: 1, name: "John", age: 10})
+               TestStruct.validate(%TestStruct{city: 1, name: "John", age: 30})
     end
   end
 end
