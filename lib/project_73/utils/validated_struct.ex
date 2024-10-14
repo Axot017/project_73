@@ -97,38 +97,65 @@ defmodule Project73.Utils.ValidatedStruct do
   end
 
   defp generate_field_validators(fields) do
-    for {name, type, opts} <- fields do
-      case type do
-        @any_type ->
-          quote do
-            {unquote(name), []}
-          end
+    fields |> Enum.map(&generate_validators/1)
+  end
 
-        @string_type ->
-          quote do
-            {unquote(name), [&Project73.Utils.ValidatedStruct.Validator.string/1]}
-          end
+  defp generate_validators({name, type, opts}) do
+    is_optional = Keyword.get(opts, :optional, false)
 
-        @integer_type ->
-          quote do
-            {unquote(name),
-             [
-               &Project73.Utils.ValidatedStruct.Validator.integer/1
-             ] ++ unquote(generate_validators(opts))}
-          end
-
-        _ ->
-          quote do
-            {unquote(name), []}
-          end
-      end
+    quote do
+      {unquote(name),
+       {unquote(is_optional),
+        unquote(generate_type_validators(type)) ++ unquote(generate_detailed_validators(opts))}}
     end
   end
 
-  defp generate_validators(opts) do
-    for {key, value} <- opts do
-      get_validator_fn(key, value)
+  defp generate_type_validators(@any_type) do
+    quote do
+      []
     end
+  end
+
+  defp generate_type_validators(@string_type) do
+    quote do
+      [&Project73.Utils.ValidatedStruct.Validator.string/1]
+    end
+  end
+
+  defp generate_type_validators(@float_type) do
+    quote do
+      [&Project73.Utils.ValidatedStruct.Validator.float/1]
+    end
+  end
+
+  defp generate_type_validators(@number_type) do
+    quote do
+      [&Project73.Utils.ValidatedStruct.Validator.number/1]
+    end
+  end
+
+  defp generate_type_validators(@integer_type) do
+    quote do
+      [&Project73.Utils.ValidatedStruct.Validator.integer/1]
+    end
+  end
+
+  defp generate_type_validators(@boolean_type) do
+    quote do
+      [&Project73.Utils.ValidatedStruct.Validator.boolean/1]
+    end
+  end
+
+  defp generate_type_validators({@list_type, _item_type}) do
+    quote do
+      [&Project73.Utils.ValidatedStruct.Validator.list/1]
+    end
+  end
+
+  defp generate_detailed_validators(opts) do
+    opts
+    |> Enum.filter(fn {key, _} -> key not in [:default, :optional] end)
+    |> Enum.map(fn {key, value} -> get_validator_fn(key, value) end)
   end
 
   defp get_validator_fn(:gt, min) do
@@ -173,24 +200,45 @@ defmodule Project73.Utils.ValidatedStruct do
     end
   end
 
+  defp get_validator_fn(:not_empty, true) do
+    quote do
+      fn value -> Project73.Utils.ValidatedStruct.Validator.not_empty(value) end
+    end
+  end
+
+  defp get_validator_fn(:max_length, max) do
+    quote do
+      fn value -> Project73.Utils.ValidatedStruct.Validator.max_length(value, unquote(max)) end
+    end
+  end
+
+  defp get_validator_fn(:min_length, min) do
+    quote do
+      fn value -> Project73.Utils.ValidatedStruct.Validator.min_length(value, unquote(min)) end
+    end
+  end
+
   defmodule Validator do
     def validate_struct(struct, field_validators) do
       field_validators
-      |> Enum.reduce(:ok, fn {field, validators}, acc ->
-        case {acc, validate_field(struct, field, validators)} do
+      |> Enum.reduce(:ok, fn {field, {is_optional, validators}}, acc ->
+        case {acc, validate_field(struct, field, is_optional, validators)} do
           {:ok, :ok} -> :ok
           {{:error, errors}, :ok} -> {:error, errors}
-          {:ok, {:error, errors}} -> {:error, errors}
-          {{:error, errors1}, {:error, errors2}} -> {:error, errors1 ++ errors2}
+          {:ok, {:error, error}} -> {:error, [error]}
+          {{:error, errors}, {:error, error}} -> {:error, errors ++ [error]}
         end
       end)
     end
 
-    def validate_field(struct, field, validators) do
+    def validate_field(struct, field, is_optional, validators) do
       result =
         case Map.get(struct, field) do
           nil ->
-            {:error, :missing_field}
+            case is_optional do
+              true -> :ok
+              false -> {:error, [:missing_field]}
+            end
 
           value ->
             validators
@@ -239,7 +287,7 @@ defmodule Project73.Utils.ValidatedStruct do
       end)
     end
 
-    def string(value) when is_bitstring(value), do: :ok
+    def string(value) when is_binary(value), do: :ok
     def string(_), do: {:error, :not_a_string}
 
     def integer(value) when is_integer(value), do: :ok
@@ -276,9 +324,47 @@ defmodule Project73.Utils.ValidatedStruct do
     def greater_than_or_equal(_, min), do: {:error, {:less_than_min, min}}
 
     def equal(value, expected) when value == expected, do: :ok
-    def equal(_, _), do: {:error, :not_equal}
+    def equal(value, _), do: {:error, {:not_equal, value}}
 
     def not_equal(value, expected) when value != expected, do: :ok
-    def not_equal(_, _), do: {:error, :equal}
+    def not_equal(value, _), do: {:error, {:equal, value}}
+
+    def not_empty(list) when is_list(list) and length(list) > 0, do: :ok
+    def not_empty(map) when is_map(map) and map_size(map) > 0, do: :ok
+
+    def not_empty(string) when is_binary(string) do
+      case String.trim(string) do
+        "" -> {:error, :empty}
+        _ -> :ok
+      end
+    end
+
+    def not_empty(_), do: {:error, :empty}
+
+    def max_length(list, max) when is_list(list) and length(list) <= max, do: :ok
+    def max_length(map, max) when is_map(map) and map_size(map) <= max, do: :ok
+
+    def max_length(string, max) when is_binary(string) do
+      case String.length(string) do
+        len when len <= max -> :ok
+        _ -> {:error, {:max_length_exceeded, max}}
+      end
+    end
+
+    def max_length(_, max), do: {:error, {:max_length_exceeded, max}}
+
+    def min_length(list, min) when is_list(list) and length(list) >= min, do: :ok
+    def min_length(map, min) when is_map(map) and map_size(map) >= min, do: :ok
+
+    def min_length(string, min) when is_binary(string) do
+      case String.length(string) do
+        len when len >= min -> :ok
+        _ -> {:error, {:min_length_not_reached, min}}
+      end
+    end
+
+    def min_length(_, min), do: {:error, {:min_length_not_reached, min}}
+
+    def ok(_), do: :ok
   end
 end
