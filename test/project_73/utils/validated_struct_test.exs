@@ -130,4 +130,19 @@ defmodule Project73.Utils.ValidatedStructTest do
                ComplexTestStruct.validate(struct)
     end
   end
+
+  validated_struct InnerStruct do
+    field :a, :string, not_empty: true
+  end
+
+  validated_struct OuterStruct do
+    field :inner, Project73.Utils.ValidatedStructTest.InnerStruct.t(), dive: true
+  end
+
+  describe "Validating nested structs" do
+    test "should validate nested structs" do
+      assert {:error, [{:field, :a, [:empty]}]} =
+               OuterStruct.validate(%OuterStruct{inner: %InnerStruct{a: ""}})
+    end
+  end
 end

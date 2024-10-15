@@ -38,7 +38,7 @@ defmodule Project73.Utils.ValidatedStruct do
         end
       end
 
-    IO.inspect(Macro.to_string(quote), label: "Generated code")
+    # IO.inspect(Macro.to_string(quote), label: "Generated code")
     quote
   end
 
@@ -101,13 +101,37 @@ defmodule Project73.Utils.ValidatedStruct do
   end
 
   defp generate_validators({name, type, opts}) do
+    type_validators =
+      generate_type_validators(type)
+
+    detailed_validators =
+      generate_detailed_validators(opts)
+
     is_optional = Keyword.get(opts, :optional, false)
+    should_dive = Keyword.get(opts, :dive, false)
+
+    needed_validators =
+      case should_dive do
+        false ->
+          quote do
+            unquote(type_validators) ++ unquote(detailed_validators)
+          end
+
+        true ->
+          quote do
+            unquote(type_validators) ++
+              unquote(detailed_validators) ++
+              [&unquote(extract_module_from_type(type)).validate/1]
+          end
+      end
 
     quote do
-      {unquote(name),
-       {unquote(is_optional),
-        unquote(generate_type_validators(type)) ++ unquote(generate_detailed_validators(opts))}}
+      {unquote(name), {unquote(is_optional), unquote(needed_validators)}}
     end
+  end
+
+  defp extract_module_from_type({{:., _, [{:__aliases__, _, mod_parts}, :t]}, _, _}) do
+    Module.concat(mod_parts)
   end
 
   defp generate_type_validators(@any_type) do
@@ -152,9 +176,28 @@ defmodule Project73.Utils.ValidatedStruct do
     end
   end
 
+  defp generate_type_validators({@map_type, _key_type, _value_type}) do
+    quote do
+      [&Project73.Utils.ValidatedStruct.Validator.map/1]
+    end
+  end
+
+  defp generate_type_validators(@atom_type) do
+    quote do
+      [&Project73.Utils.ValidatedStruct.Validator.atom/1]
+    end
+  end
+
+  # Some custom type
+  defp generate_type_validators(_type) do
+    quote do
+      []
+    end
+  end
+
   defp generate_detailed_validators(opts) do
     opts
-    |> Enum.filter(fn {key, _} -> key not in [:default, :optional] end)
+    |> Enum.filter(fn {key, _} -> key not in [:default, :optional, :dive] end)
     |> Enum.map(fn {key, value} -> get_validator_fn(key, value) end)
   end
 
@@ -223,12 +266,23 @@ defmodule Project73.Utils.ValidatedStruct do
       field_validators
       |> Enum.reduce(:ok, fn {field, {is_optional, validators}}, acc ->
         case {acc, validate_field(struct, field, is_optional, validators)} do
-          {:ok, :ok} -> :ok
-          {{:error, errors}, :ok} -> {:error, errors}
-          {:ok, {:error, error}} -> {:error, [error]}
-          {{:error, errors}, {:error, error}} -> {:error, errors ++ [error]}
+          {:ok, :ok} ->
+            :ok
+
+          {{:error, errors}, :ok} ->
+            {:error, errors}
+
+          {:ok, {:error, error}} ->
+            IO.inspect({:error, error}, label: "Error")
+            {:error, [error]}
+
+          {{:error, errors}, {:error, error}} ->
+            {:error, errors ++ [error]}
         end
       end)
+    end
+
+    defp flatten_errors({:field, path, errors}) do
     end
 
     def validate_field(struct, field, is_optional, validators) do
@@ -254,7 +308,7 @@ defmodule Project73.Utils.ValidatedStruct do
 
       case result do
         :ok -> :ok
-        {:error, errors} -> {:error, {:field, field, errors}}
+        {:error, errors} -> {:error, {:field, {field}, errors}}
       end
     end
 
@@ -364,7 +418,5 @@ defmodule Project73.Utils.ValidatedStruct do
     end
 
     def min_length(_, min), do: {:error, {:min_length_not_reached, min}}
-
-    def ok(_), do: :ok
   end
 end
