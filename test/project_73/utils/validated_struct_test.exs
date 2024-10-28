@@ -145,4 +145,22 @@ defmodule Project73.Utils.ValidatedStructTest do
                OuterStruct.validate(%OuterStruct{inner: %InnerStruct{a: ""}})
     end
   end
+
+  validated_struct do
+    field :name
+    field :age, :integer, lt: 100
+    field :city, :string, default: "New York"
+  end
+
+  describe "ValidatedStruct without a name" do
+    test "should generate a struct with the given fields" do
+      struct = %__MODULE__{
+        name: "John",
+        age: 30,
+        city: "Washington"
+      }
+
+      assert struct.__struct__ == __MODULE__
+    end
+  end
 end

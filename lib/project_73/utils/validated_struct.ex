@@ -11,7 +11,30 @@ defmodule Project73.Utils.ValidatedStruct do
 
   defmacro __using__(_) do
     quote do
-      import Project73.Utils.ValidatedStruct, only: [validated_struct: 2]
+      import Project73.Utils.ValidatedStruct, only: [validated_struct: 2, validated_struct: 1]
+    end
+  end
+
+  defmacro validated_struct(do: block) do
+    fields = extract_fields(block)
+
+    module = __CALLER__.module
+
+    type_def = generate_types(module, fields)
+
+    validation_fn = generate_validation_function(module, fields)
+
+    struct_fields =
+      for {name, _type, opts} <- fields do
+        default = Keyword.get(opts, :default, nil)
+        {name, default}
+      end
+
+    quote do
+      unquote(type_def)
+      defstruct unquote(struct_fields)
+
+      unquote(validation_fn)
     end
   end
 
@@ -28,18 +51,14 @@ defmodule Project73.Utils.ValidatedStruct do
 
     validation_fn = generate_validation_function(name, fields)
 
-    quote =
-      quote do
-        defmodule unquote(name) do
-          unquote(type_def)
-          defstruct unquote(struct_fields)
+    quote do
+      defmodule unquote(name) do
+        unquote(type_def)
+        defstruct unquote(struct_fields)
 
-          unquote(validation_fn)
-        end
+        unquote(validation_fn)
       end
-
-    # IO.inspect(Macro.to_string(quote), label: "Generated code")
-    quote
+    end
   end
 
   defp extract_fields(block) do
