@@ -265,25 +265,27 @@ defmodule Project73.Utils.ValidatedStruct do
     def validate_struct(struct, field_validators) do
       field_validators
       |> Enum.reduce(:ok, fn {field, {is_optional, validators}}, acc ->
-        case {acc, validate_field(struct, field, is_optional, validators)} do
-          {:ok, :ok} ->
-            :ok
-
-          {{:error, errors}, :ok} ->
-            {:error, errors}
-
-          {:ok, {:error, error}} ->
-            IO.inspect({:error, error}, label: "Error")
-            {:error, [error]}
-
-          {{:error, errors}, {:error, error}} ->
-            {:error, errors ++ [error]}
-        end
+        add_errors(acc, validate_field(struct, field, is_optional, validators))
       end)
     end
 
-    defp flatten_errors({:field, path, errors}) do
-    end
+    defp add_errors(:ok, :ok), do: :ok
+    defp add_errors({:error, errors}, :ok) when is_list(errors), do: {:error, errors}
+    defp add_errors({:error, error}, :ok), do: {:error, [error]}
+    defp add_errors(:ok, {:error, errors}) when is_list(errors), do: {:error, errors}
+    defp add_errors(:ok, {:error, error}), do: {:error, [error]}
+
+    defp add_errors({:error, errors1}, {:error, errors2})
+         when is_list(errors1) and is_list(errors2),
+         do: {:error, errors1 ++ errors2}
+
+    defp add_errors({:error, errors}, {:error, error}) when is_list(errors),
+      do: {:error, [error | errors]}
+
+    defp add_errors({:error, error}, {:error, errors}) when is_list(errors),
+      do: {:error, [error | errors]}
+
+    defp add_errors({:error, error1}, {:error, error2}), do: {:error, [error1, error2]}
 
     def validate_field(struct, field, is_optional, validators) do
       result =
@@ -296,20 +298,32 @@ defmodule Project73.Utils.ValidatedStruct do
 
           value ->
             validators
-            |> Enum.reduce(:ok, fn validator, acc ->
-              case {acc, validator.(value)} do
-                {:ok, :ok} -> :ok
-                {{:error, errors}, :ok} -> {:error, errors}
-                {:ok, {:error, error}} -> {:error, [error]}
-                {{:error, errors}, {:error, error}} -> {:error, errors ++ [error]}
-              end
-            end)
+            |> Enum.reduce(:ok, &add_errors(&2, &1.(value)))
         end
 
       case result do
         :ok -> :ok
-        {:error, errors} -> {:error, {:field, {field}, errors}}
+        {:error, errors} -> {:error, flatten_errors({field}, errors)}
       end
+    end
+
+    defp flatten_errors(field, [{{inner_field}, errors}])
+         when is_tuple(field) and is_atom(inner_field) and is_list(errors) do
+      new_field = Tuple.append(field, inner_field)
+
+      errors |> Enum.map(&flatten_errors(new_field, &1))
+    end
+
+    defp flatten_errors(field, error) when is_tuple(field) and is_atom(error) do
+      {field, [error]}
+    end
+
+    defp flatten_errors(field, error) when is_tuple(field) and is_tuple(error) do
+      {field, [error]}
+    end
+
+    defp flatten_errors(field, errors) when is_tuple(field) and is_list(errors) do
+      {field, errors}
     end
 
     def validate_list(list, validators) do
@@ -323,7 +337,7 @@ defmodule Project73.Utils.ValidatedStruct do
               {:ok, :ok} -> :ok
               {{:error, errors}, :ok} -> {:error, errors}
               {:ok, {:error, errors}} -> {:error, errors}
-              {{:error, errors1}, {:error, errors2}} -> {:error, errors1 ++ errors2}
+              {{:error, errors1}, {:error, errors2}} -> {:error, errors2 ++ errors1}
             end
           end)
 
@@ -336,7 +350,7 @@ defmodule Project73.Utils.ValidatedStruct do
           {:ok, :ok} -> :ok
           {{:error, errors}, :ok} -> {:error, errors}
           {:ok, {:error, errors}} -> {:error, errors}
-          {{:error, errors1}, {:error, errors2}} -> {:error, errors1 ++ errors2}
+          {{:error, errors1}, {:error, errors2}} -> {:error, errors2 ++ errors1}
         end
       end)
     end

@@ -46,7 +46,7 @@ defmodule Project73.Utils.ValidatedStructTest do
     end
 
     test "should validate if field has correct type" do
-      assert {:error, [{:field, :city, [:not_a_string]}]} =
+      assert {:error, [{{:city}, [:not_a_string]}]} =
                TestStruct.validate(%TestStruct{city: 1, name: "John", age: 30})
     end
   end
@@ -71,8 +71,8 @@ defmodule Project73.Utils.ValidatedStructTest do
     test "should require non-optional fields" do
       assert {:error,
               [
-                {:field, :str_max_length, [:missing_field]},
-                {:field, :str_min_length, [:missing_field]}
+                {{:int_neq}, [:missing_field]},
+                {{:int_eq}, [:missing_field]}
                 | _
               ]} =
                ComplexTestStruct.validate(%ComplexTestStruct{})
@@ -81,18 +81,18 @@ defmodule Project73.Utils.ValidatedStructTest do
     test "should fail all validations" do
       assert {:error,
               [
-                {:field, :str_max_length, [{:max_length_exceeded, 5}]},
-                {:field, :str_min_length, [{:min_length_not_reached, 5}]},
-                {:field, :str_not_empty, [:empty]},
-                {:field, :list_max_length, [{:max_length_exceeded, 3}]},
-                {:field, :list_min_length, [{:min_length_not_reached, 3}]},
-                {:field, :list_not_empty, [:empty]},
-                {:field, :int_gt, [{:less_than_min, 10}]},
-                {:field, :float_lt, [{:greater_than_max, 10.0}]},
-                {:field, :float_gte, [{:less_than_min, 10.0}]},
-                {:field, :int_lte, [{:greater_than_max, 10}]},
-                {:field, :int_eq, [{:not_equal, 5}]},
-                {:field, :int_neq, [{:equal, 10}]}
+                {{:int_neq}, [{:equal, 10}]},
+                {{:int_eq}, [{:not_equal, 5}]},
+                {{:int_lte}, [{:greater_than_max, 10}]},
+                {{:float_gte}, [{:less_than_min, 10.0}]},
+                {{:float_lt}, [{:greater_than_max, 10.0}]},
+                {{:int_gt}, [{:less_than_min, 10}]},
+                {{:list_not_empty}, [:empty]},
+                {{:list_min_length}, [{:min_length_not_reached, 3}]},
+                {{:list_max_length}, [{:max_length_exceeded, 3}]},
+                {{:str_not_empty}, [:empty]},
+                {{:str_min_length}, [{:min_length_not_reached, 5}]},
+                {{:str_max_length}, [{:max_length_exceeded, 5}]}
               ]} =
                ComplexTestStruct.validate(%ComplexTestStruct{
                  str_max_length: "123456",
@@ -141,7 +141,7 @@ defmodule Project73.Utils.ValidatedStructTest do
 
   describe "Validating nested structs" do
     test "should validate nested structs" do
-      assert {:error, [{:field, :a, [:empty]}]} =
+      assert {:error, [{{:inner, :a}, [:empty]}]} =
                OuterStruct.validate(%OuterStruct{inner: %InnerStruct{a: ""}})
     end
   end
