@@ -1,5 +1,6 @@
 defmodule Project73Web.ProfileUpdateLive do
   require Logger
+  alias Project73Web.I18n
   alias Project73.Shared.Address
   alias Project73.Profile.Command
   alias Project73.Utils.Validator
@@ -61,7 +62,7 @@ defmodule Project73Web.ProfileUpdateLive do
         {:noreply, redirect(socket, to: ~p"/auction")}
 
       {:error, {:validation, errors}} ->
-        translated_errors = Validator.translate(errors)
+        translated_errors = I18n.translate_error(errors)
 
         updated_form =
           to_form(profile_form)

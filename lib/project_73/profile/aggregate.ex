@@ -1,4 +1,5 @@
 defmodule Project73.Profile.Aggregate do
+  require Logger
   alias Project73.Profile.Event
   alias Project73.Profile.Command
 
@@ -42,8 +43,12 @@ defmodule Project73.Profile.Aggregate do
 
   def handle_command(%__MODULE__{} = self, cmd) do
     case Command.validate(cmd) do
-      {:ok, cmd} -> handle_valid_command(self, cmd)
-      {:error, errors} -> {:error, errors}
+      {:ok, cmd} ->
+        handle_valid_command(self, cmd)
+
+      {:error, errors} ->
+        Logger.info("Invalid command: #{inspect(errors)}")
+        {:error, {:validation, errors}}
     end
   end
 

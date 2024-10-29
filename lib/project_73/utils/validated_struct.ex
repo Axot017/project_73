@@ -334,23 +334,23 @@ defmodule Project73.Utils.ValidatedStruct do
       end
     end
 
-    defp flatten_errors(field, [{{inner_field}, errors}])
+    defp flatten_errors(field, {{inner_field}, errors})
          when is_tuple(field) and is_atom(inner_field) and is_list(errors) do
       new_field = Tuple.append(field, inner_field)
 
-      errors |> Enum.map(&flatten_errors(new_field, &1))
+      errors |> Enum.flat_map(&flatten_errors(new_field, &1))
     end
 
     defp flatten_errors(field, error) when is_tuple(field) and is_atom(error) do
-      {field, [error]}
+      [{field, [error]}]
     end
 
     defp flatten_errors(field, error) when is_tuple(field) and is_tuple(error) do
-      {field, [error]}
+      [{field, [error]}]
     end
 
     defp flatten_errors(field, errors) when is_tuple(field) and is_list(errors) do
-      {field, errors}
+      errors |> Enum.flat_map(&flatten_errors(field, &1))
     end
 
     def validate_list(list, validators) do

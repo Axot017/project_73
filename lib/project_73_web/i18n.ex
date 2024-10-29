@@ -1,4 +1,4 @@
-defmodule Project73Web.Translation do
+defmodule Project73Web.I18n do
   use Gettext, backend: Project73Web.Gettext
 
   def translate_error(map) when is_map(map) do
