@@ -40,7 +40,14 @@ defmodule Project73.Profile.Aggregate do
     %__MODULE__{}
   end
 
-  def handle_command(%__MODULE__{} = self, %Command.Create{} = cmd) do
+  def handle_command(%__MODULE__{} = self, cmd) do
+    case Command.validate(cmd) do
+      {:ok, cmd} -> handle_valid_command(self, cmd)
+      {:error, errors} -> {:error, errors}
+    end
+  end
+
+  defp handle_valid_command(%__MODULE__{} = self, %Command.Create{} = cmd) do
     case self.created_at do
       nil ->
         {:ok,
@@ -59,7 +66,7 @@ defmodule Project73.Profile.Aggregate do
     end
   end
 
-  def handle_command(%__MODULE__{} = self, %Command.UpdatePaymentAccount{} = cmd) do
+  defp handle_valid_command(%__MODULE__{} = self, %Command.UpdatePaymentAccount{} = cmd) do
     if self.payment_account_id == nil do
       {:ok,
        [
@@ -74,7 +81,7 @@ defmodule Project73.Profile.Aggregate do
     end
   end
 
-  def handle_command(%__MODULE__{} = self, %Command.Update{} = cmd) do
+  defp handle_valid_command(%__MODULE__{} = self, %Command.Update{} = cmd) do
     events =
       change_username(self, cmd.username) ++
         change_first_name(self, cmd.first_name) ++

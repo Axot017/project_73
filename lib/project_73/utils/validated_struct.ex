@@ -4,6 +4,7 @@ defmodule Project73.Utils.ValidatedStruct do
   @string_type :string
   @integer_type :integer
   @float_type :float
+  @decimal_type :decimal
   @number_type :number
   @boolean_type :boolean
   @list_type :list
@@ -88,6 +89,7 @@ defmodule Project73.Utils.ValidatedStruct do
   defp convert_type(@string_type), do: quote(do: String.t())
   defp convert_type(@integer_type), do: quote(do: integer())
   defp convert_type(@float_type), do: quote(do: float())
+  defp convert_type(@decimal_type), do: quote(do: Decimal.t())
   defp convert_type(@number_type), do: quote(do: number())
   defp convert_type(@boolean_type), do: quote(do: boolean())
   defp convert_type({@list_type, inner_type}), do: quote(do: [unquote(convert_type(inner_type))])
@@ -162,6 +164,12 @@ defmodule Project73.Utils.ValidatedStruct do
   defp generate_type_validators(@string_type) do
     quote do
       [&Project73.Utils.ValidatedStruct.Validator.string/1]
+    end
+  end
+
+  defp generate_type_validators(@decimal_type) do
+    quote do
+      [&Project73.Utils.ValidatedStruct.Validator.decimal/1]
     end
   end
 
@@ -386,6 +394,9 @@ defmodule Project73.Utils.ValidatedStruct do
     def number(value) when is_number(value), do: :ok
     def number(_), do: {:error, :not_a_number}
 
+    def decimal(%Decimal{}), do: :ok
+    def decimal(_), do: {:error, :not_a_decimal}
+
     def boolean(value) when value in [true, false], do: :ok
     def boolean(_), do: {:error, :not_a_boolean}
 
@@ -399,15 +410,47 @@ defmodule Project73.Utils.ValidatedStruct do
     def atom(_), do: {:error, :not_an_atom}
 
     def less_than(value, max) when value < max, do: :ok
+
+    def less_than(%Decimal{} = value, max) do
+      case Decimal.compare(value, max) do
+        :lt -> :ok
+        _ -> {:error, {:greater_than_max, max}}
+      end
+    end
+
     def less_than(_, max), do: {:error, {:greater_than_max, max}}
 
     def less_than_or_equal(value, max) when value <= max, do: :ok
+
+    def less_than_or_equal(%Decimal{} = value, max) do
+      case Decimal.compare(value, max) do
+        :gt -> {:error, {:greater_than_max, max}}
+        _ -> :ok
+      end
+    end
+
     def less_than_or_equal(_, max), do: {:error, {:greater_than_max, max}}
 
     def greater_than(value, min) when value > min, do: :ok
+
+    def greater_than(%Decimal{} = value, min) do
+      case Decimal.compare(value, min) do
+        :gt -> :ok
+        _ -> {:error, {:less_than_min, min}}
+      end
+    end
+
     def greater_than(_, min), do: {:error, {:less_than_min, min}}
 
     def greater_than_or_equal(value, min) when value >= min, do: :ok
+
+    def greater_than_or_equal(%Decimal{} = value, min) do
+      case Decimal.compare(value, min) do
+        :lt -> {:error, {:less_than_min, min}}
+        _ -> :ok
+      end
+    end
+
     def greater_than_or_equal(_, min), do: {:error, {:less_than_min, min}}
 
     def equal(value, expected) when value == expected, do: :ok

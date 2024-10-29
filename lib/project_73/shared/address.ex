@@ -1,11 +1,11 @@
 defmodule Project73.Shared.Address do
-  @type t :: %__MODULE__{
-          country: String.t(),
-          city: String.t(),
-          postal_code: String.t(),
-          line1: String.t(),
-          line2: String.t()
-        }
+  use Project73.Utils.ValidatedStruct
 
-  defstruct [:country, :city, :postal_code, :line1, :line2]
+  validated_struct do
+    field :country, :string, not_empty: true
+    field :city, :string, not_empty: true
+    field :postal_code, :string, not_empty: true
+    field :line1, :string, not_empty: true
+    field :line2, :string
+  end
 end

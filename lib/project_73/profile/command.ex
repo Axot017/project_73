@@ -1,6 +1,7 @@
 defmodule Project73.Profile.Command do
   alias Project73.Profile.Command.Create
   alias Project73.Profile.Command
+  use Project73.Utils.ValidatedStruct
 
   @type t() ::
           Command.Create.t()
@@ -8,43 +9,32 @@ defmodule Project73.Profile.Command do
           | Command.RequestDeposit.t()
           | Command.Update.t()
 
-  defmodule Create do
-    @type t() :: %__MODULE__{
-            id: String.t(),
-            provider: String.t(),
-            email: String.t()
-          }
-    defstruct [:id, :provider, :email]
+  validated_struct Create do
+    field :id, :string, not_empty: true
+    field :provider, :string, not_empty: true
+    field :email, :string, not_empty: true
   end
 
-  defmodule UpdatePaymentAccount do
-    @type t() :: %__MODULE__{
-            payment_account_id: String.t()
-          }
-    defstruct [:payment_account_id]
+  validated_struct UpdatePaymentAccount do
+    field :payment_account_id, :string, not_empty: true
   end
 
-  defmodule RequestDeposit do
-    @type t() :: %__MODULE__{
-            amount: Decimal.t()
-          }
-    defstruct [:amount]
+  validated_struct RequestDeposit do
+    field :amount, :decimal, gt: 0
   end
 
-  defmodule Update do
-    alias Project73.Shared.Address
-
-    @type t() :: %__MODULE__{
-            username: String.t(),
-            first_name: String.t(),
-            last_name: String.t(),
-            address: Address.t()
-          }
-    defstruct [
-      :username,
-      :first_name,
-      :last_name,
-      :address
-    ]
+  validated_struct Update do
+    field :username, :string, not_empty: true
+    field :first_name, :string, not_empty: true
+    field :last_name, :string, not_empty: true
+    field :address, Project73.Shared.Address.t(), dive: true
   end
+
+  def validate(%Command.Create{} = cmd), do: Command.Create.validate(cmd)
+
+  def validate(%Command.UpdatePaymentAccount{} = cmd),
+    do: Command.UpdatePaymentAccount.validate(cmd)
+
+  def validate(%Command.RequestDeposit{} = cmd), do: Command.RequestDeposit.validate(cmd)
+  def validate(%Command.Update{} = cmd), do: Command.Update.validate(cmd)
 end
