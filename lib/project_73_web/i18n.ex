@@ -1,20 +1,23 @@
 defmodule Project73Web.I18n do
   use Gettext, backend: Project73Web.Gettext
 
-  def translate_error(map) when is_map(map) do
-    map
-    |> Enum.map(fn {field, errors} ->
-      {field, Enum.map(errors, &translate_error/1)}
-    end)
+  def translate_errors(errors) when is_list(errors) do
+    Enum.map(errors, &translate_error/1)
   end
 
-  def translate_error({:min_length_not_reached, min}),
+  defp translate_error({field, errors}) when is_tuple(field) and is_list(errors) do
+    field_name = field |> Tuple.to_list() |> Enum.join("_")
+    [error | _] = errors
+    {String.to_atom(field_name), translate_error(error)}
+  end
+
+  defp translate_error({:min_length_not_reached, min}),
     do: gettext("Too short, minimum size is %{size}", size: min)
 
-  def translate_error({:max_length_exceeded, max}),
+  defp translate_error({:max_length_exceeded, max}),
     do: gettext("Too long, maximum size is %{size}", size: max)
 
-  def translate_error(:empty), do: gettext("Can't be empty")
+  defp translate_error(:empty), do: gettext("Can't be empty")
 
-  def translate_error(_), do: gettext("Invalid value")
+  defp translate_error(_), do: gettext("Invalid value")
 end

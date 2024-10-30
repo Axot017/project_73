@@ -3,7 +3,6 @@ defmodule Project73Web.ProfileUpdateLive do
   alias Project73Web.I18n
   alias Project73.Shared.Address
   alias Project73.Profile.Command
-  alias Project73.Utils.Validator
   alias Project73.Profile
   use Project73Web, :live_view
 
@@ -21,9 +20,9 @@ defmodule Project73Web.ProfileUpdateLive do
            "username" => profile.username,
            "first_name" => profile.first_name,
            "last_name" => profile.last_name,
-           "country" => profile.address && profile.address.country,
-           "city" => profile.address && profile.address.city,
-           "postal_code" => profile.address && profile.address.postal_code,
+           "address_country" => profile.address && profile.address.country,
+           "address_city" => profile.address && profile.address.city,
+           "address_postal_code" => profile.address && profile.address.postal_code,
            "address_line1" => profile.address && profile.address.line1,
            "address_line2" => profile.address && profile.address.line2
          })
@@ -36,9 +35,9 @@ defmodule Project73Web.ProfileUpdateLive do
           "username" => username,
           "first_name" => first_name,
           "last_name" => last_name,
-          "country" => country,
-          "city" => city,
-          "postal_code" => postal_code,
+          "address_country" => country,
+          "address_city" => city,
+          "address_postal_code" => postal_code,
           "address_line1" => address_line1,
           "address_line2" => address_line2
         } = profile_form,
@@ -62,7 +61,7 @@ defmodule Project73Web.ProfileUpdateLive do
         {:noreply, redirect(socket, to: ~p"/auction")}
 
       {:error, {:validation, errors}} ->
-        translated_errors = I18n.translate_error(errors)
+        translated_errors = I18n.translate_errors(errors)
 
         updated_form =
           to_form(profile_form)
@@ -111,17 +110,17 @@ defmodule Project73Web.ProfileUpdateLive do
           />
           <.input
             label="Country"
-            field={@form[:country]}
+            field={@form[:address_country]}
             class="bg-gray-700 text-gray-100 border-gray-600 focus:border-indigo-500 focus:ring-indigo-500"
           />
           <.input
             label="City"
-            field={@form[:city]}
+            field={@form[:address_city]}
             class="bg-gray-700 text-gray-100 border-gray-600 focus:border-indigo-500 focus:ring-indigo-500"
           />
           <.input
             label="Postal Code"
-            field={@form[:postal_code]}
+            field={@form[:address_postal_code]}
             class="bg-gray-700 text-gray-100 border-gray-600 focus:border-indigo-500 focus:ring-indigo-500"
           />
           <.input

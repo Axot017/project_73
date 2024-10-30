@@ -16,6 +16,8 @@ defmodule Project73.Profile.MongoRepository do
       |> Enum.map(&map_event/1)
       |> Enum.map(&Utils.Mongo.serialize/1)
 
+    Logger.debug("Saving events: #{inspect(events)}")
+
     result =
       Mongo.insert_one(
         :mongo,

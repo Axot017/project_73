@@ -297,6 +297,9 @@ defmodule Project73.Utils.ValidatedStruct do
     end
 
     defp add_errors(:ok, :ok), do: :ok
+    defp add_errors(:ok, {:ok, _}), do: :ok
+    defp add_errors({:ok, _}, :ok), do: :ok
+    defp add_errors({:ok, _}, {:ok, _}), do: :ok
     defp add_errors({:error, errors}, :ok) when is_list(errors), do: {:error, errors}
     defp add_errors({:error, error}, :ok), do: {:error, [error]}
     defp add_errors(:ok, {:error, errors}) when is_list(errors), do: {:error, errors}
