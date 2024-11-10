@@ -1,17 +1,25 @@
 defmodule Project73.Profile.StripeConnector do
   @behaviour Project73.Profile.PaymentProvider
+  alias Project73.Shared
+  alias Project73.Utils.Json
   require Logger
 
   def create_customer(%{email: email, username: username, address: address, id: id}) do
+    request =
+      %{
+        email: email,
+        name: username,
+        # address: address,
+        metadata: %{
+          "id" => id
+        }
+      }
+      |> Json.serialize(&Shared.Mapper.map_from_struct/1)
+
+    Logger.debug("Creating customer for user: #{id} with request: #{inspect(request)}")
+
     with {:ok, customer} <-
-           Stripe.Customer.create(%{
-             email: email,
-             name: username,
-             address: address,
-             metadata: %{
-               "id" => id
-             }
-           }) do
+           Stripe.Customer.create(request) do
       Logger.debug("Customer created with id #{customer.id} created for user: #{id}")
       {:ok, customer.id}
     else

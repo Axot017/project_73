@@ -1,22 +1,21 @@
 defmodule Project73.Profile.MongoRepository do
-  require Project73.Utils.MappingGenerator, as: MappingGenerator
   alias Project73.Profile.Event
   alias Project73.Utils
   require Logger
+  use Project73.Utils.Json
+
   @behaviour Project73.Profile.Repository
 
   @collection "profile_events"
 
   def save_events(id, events) do
+    Logger.debug("Saving events: #{inspect(events)}")
     first_event = hd(events)
     %{sequence_number: version} = first_event
 
     events =
       events
-      |> Enum.map(&map_event/1)
-      |> Enum.map(&Utils.Mongo.serialize/1)
-
-    Logger.debug("Saving events: #{inspect(events)}")
+      |> Enum.map(fn event -> Utils.Json.serialize(event, &map_from_struct/1) end)
 
     result =
       Mongo.insert_one(
@@ -52,8 +51,7 @@ defmodule Project73.Profile.MongoRepository do
           cursor
           |> Enum.map(&Map.get(&1, "events"))
           |> List.flatten()
-          |> Enum.map(&Utils.Mongo.deserialize/1)
-          |> Enum.map(&map_event/1)
+          |> Enum.map(fn event -> Utils.Json.deserialize(event, &map_to_struct/1) end)
 
         if Enum.empty?(events) do
           :ok
@@ -68,10 +66,13 @@ defmodule Project73.Profile.MongoRepository do
     end
   end
 
-  MappingGenerator.event_mapping(Event.Created, "profile_created")
-  MappingGenerator.event_mapping(Event.FirstNameChanged, "first_name_changed")
-  MappingGenerator.event_mapping(Event.LastNameChanged, "last_name_changed")
-  MappingGenerator.event_mapping(Event.UsernameChanged, "username_changed")
-  MappingGenerator.event_mapping(Event.AddressChanged, "address_changed")
-  MappingGenerator.event_mapping(Event.PaymentAccountUpdated, "payment_account_updated")
+  mapping do
+    type("profile_created", Event.Created)
+    type("first_name_changed", Event.FirstNameChanged)
+    type("last_name_changed", Event.LastNameChanged)
+    type("username_changed", Event.UsernameChanged)
+    type("address_changed", Event.AddressChanged)
+    type("payment_account_updated", Event.PaymentAccountUpdated)
+    include(Project73.Shared.Mapper)
+  end
 end
