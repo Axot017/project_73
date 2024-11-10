@@ -1,6 +1,5 @@
 defmodule Project73.Profile.StripeConnector do
   @behaviour Project73.Profile.PaymentProvider
-  alias Project73.Shared
   alias Project73.Utils.Json
   require Logger
 
@@ -9,12 +8,12 @@ defmodule Project73.Profile.StripeConnector do
       %{
         email: email,
         name: username,
-        # address: address,
+        address: address,
         metadata: %{
           "id" => id
         }
       }
-      |> Json.serialize(&Shared.Mapper.map_from_struct/1)
+      |> Json.serialize(&Json.to_map/1)
 
     Logger.debug("Creating customer for user: #{id} with request: #{inspect(request)}")
 
@@ -34,18 +33,22 @@ defmodule Project73.Profile.StripeConnector do
         customer_id: customer_id,
         user_id: user_id
       }) do
+    request =
+      %{
+        amount: amount,
+        currency: "PLN",
+        customer: customer_id,
+        automatic_payment_methods: %{
+          enabled: true
+        },
+        metadata: %{
+          "id" => user_id
+        }
+      }
+      |> Json.serialize(&Json.to_map/1)
+
     with {:ok, payment_intent} <-
-           Stripe.PaymentIntent.create(%{
-             amount: amount,
-             currency: "PLN",
-             customer: customer_id,
-             automatic_payment_methods: %{
-               enabled: true
-             },
-             metadata: %{
-               "id" => user_id
-             }
-           }) do
+           Stripe.PaymentIntent.create(request) do
       Logger.debug("Payment intent created for user: #{user_id}")
       {:ok, payment_intent}
     else

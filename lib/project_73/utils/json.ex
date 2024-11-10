@@ -138,4 +138,13 @@ defmodule Project73.Utils.Json do
     do: Enum.map(list, &serialize(&1, struct_mapper))
 
   def serialize(value, _), do: value
+
+  def to_map(struct) when is_struct(struct) do
+    struct
+    |> Map.from_struct()
+  end
+
+  def to_map(map) when is_map(map) do
+    map
+  end
 end
