@@ -31,6 +31,7 @@ defmodule Project73Web.Router do
     get "/", PageController, :home
     get "/login", PageController, :login
     live "/auction", AuctionLive
+    live "/auction/new", NewAuctionLive
 
     scope "/auth" do
       delete "/logout", AuthController, :delete
