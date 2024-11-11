@@ -47,7 +47,7 @@ defmodule Project73.Profile.Aggregate do
         handle_valid_command(self, cmd)
 
       {:error, errors} ->
-        Logger.info("Invalid command: #{inspect(errors)}")
+        Logger.info("Invalid profile command: #{inspect(errors)}")
         {:error, {:validation, errors}}
     end
   end

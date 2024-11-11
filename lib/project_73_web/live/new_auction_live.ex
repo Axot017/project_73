@@ -9,12 +9,24 @@ defmodule Project73Web.NewAuctionLive do
        current_user: session["current_user"],
        form:
          to_form(%{
-           title: "",
-           description: "",
-           initial_price: ""
+           "title" => "",
+           "description" => "",
+           "initial_price" => ""
          })
      )
      |> allow_upload(:images, accept: ~w(.jpg .jpeg .png), max_entries: 5)}
+  end
+
+  def handle_event("validate", %{"_target" => _targets}, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "save",
+        _params,
+        socket
+      ) do
+    {:noreply, socket}
   end
 
   def render(assigns) do
@@ -37,7 +49,12 @@ defmodule Project73Web.NewAuctionLive do
           field={@form[:initial_price]}
           class="bg-gray-700 text-gray-100 border-gray-600 focus:border-indigo-500 focus:ring-indigo-500"
         />
-        <.live_file_input upload={@uploads.images} />
+        <div phx-drop-target={@uploads.images.ref}>
+          <.live_file_input upload={@uploads.images} />
+        </div>
+        <%= for entry <- @uploads.images.entries do %>
+          <.live_img_preview entry={entry} width="75" />
+        <% end %>
         <.button
           type="submit"
           class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-md transition duration-300 ease-in-out"
