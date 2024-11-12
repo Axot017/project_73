@@ -47,7 +47,6 @@ defmodule Project73.Profile.Actor do
   def handle_call({:create, %Command.Create{} = cmd}, _from, state) do
     with {:ok, events} <-
            Aggregate.handle_command(state.aggregate, cmd),
-         _ <- Logger.debug("Events: #{inspect(events)}"),
          :ok <- @repository.save_events(cmd.id, events) do
       new_state = Aggregate.apply(state.aggregate, events)
       {:reply, :ok, %__MODULE__{aggregate: new_state}}
