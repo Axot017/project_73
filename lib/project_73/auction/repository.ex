@@ -1,4 +1,4 @@
-defmodule Project73.Auction.Repostory do
+defmodule Project73.Auction.Repository do
   @callback save_events(String.t(), list()) :: :ok | {:error, term()}
 
   @callback load_aggregate(String.t()) ::

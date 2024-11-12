@@ -1,15 +1,26 @@
 defmodule Project73.Auction.MongoRepository do
-  @behaviour Project73.Auction.Repostory
+  alias Project73.Profile.Event
+  alias Project73.Utils
+  use Project73.Utils.Json
   require Logger
 
+  @behaviour Project73.Auction.Repository
+
+  @collection "auction_events"
+
   def save_events(id, events) do
+    Logger.debug(%{"message" => "Saving auction events", "events" => events, "id" => id})
     first_event = hd(events)
-    version = first_event.sequence_number
+    %{sequence_number: version} = first_event
+
+    events =
+      events
+      |> Enum.map(fn event -> Utils.Json.serialize(event, &map_from_struct/1) end)
 
     result =
       Mongo.insert_one(
         :mongo,
-        "events",
+        @collection,
         %{
           _id: "#{id}/#{version}",
           events: events
@@ -21,18 +32,28 @@ defmodule Project73.Auction.MongoRepository do
         :ok
 
       {:error, reason} ->
-        Logger.error("Failed to save events: #{inspect(reason)}")
+        Logger.error(%{
+          "message" => "Failed to save auction events",
+          "reason" => reason,
+          "id" => id
+        })
+
         {:error, reason}
     end
   end
 
   def load_aggregate(id) do
     result =
-      Mongo.find(:mongo, "events", %{"_id" => %BSON.Regex{pattern: "^#{id}", options: "i"}})
+      Mongo.find(:mongo, @collection, %{"_id" => %BSON.Regex{pattern: "^#{id}", options: "i"}})
 
     case result do
       {:error, reason} ->
-        Logger.error("Failed to load aggregate: #{inspect(reason)}")
+        Logger.error(%{
+          "message" => "Failed to load auction aggregate",
+          "reason" => reason,
+          "id" => id
+        })
+
         {:error, reason}
 
       cursor ->
@@ -40,28 +61,24 @@ defmodule Project73.Auction.MongoRepository do
           cursor
           |> Enum.map(&Map.get(&1, "events"))
           |> List.flatten()
-          |> Enum.map(&map_event/1)
+          |> Enum.map(fn event -> Utils.Json.deserialize(event, &map_to_struct/1) end)
 
         if Enum.empty?(events) do
           :ok
         else
-          Logger.error("Loaded events: #{inspect(events)}")
-          aggregate = Project73.Auction.Aggregate.empty()
+          aggregate =
+            Project73.Profile.Aggregate.empty()
+            |> Project73.Profile.Aggregate.apply(events)
 
-          {:ok, Project73.Auction.Aggregate.apply(aggregate, events)}
+          Logger.debug(%{"message" => "Loaded auction aggregate", "aggregate" => aggregate})
+
+          {:ok, aggregate}
         end
     end
   end
 
-  defp map_event(event) do
-    event
-    |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
-    |> parse_atom_fields(~w(type)a)
-  end
-
-  defp parse_atom_fields(map, fields) do
-    Enum.reduce(fields, map, fn field, acc ->
-      Map.update(acc, field, nil, &String.to_atom/1)
-    end)
+  mapping do
+    type("auction_created", Event.Created)
+    include(Project73.Shared.Mapper)
   end
 end

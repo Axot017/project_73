@@ -26,6 +26,10 @@ defmodule Project73.Auction.Aggregate do
     :version
   ]
 
+  def empty() do
+    %__MODULE__{}
+  end
+
   def handle_command(%__MODULE__{} = self, cmd) do
     case Command.validate(cmd) do
       {:ok, cmd} ->

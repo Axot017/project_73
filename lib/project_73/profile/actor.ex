@@ -16,8 +16,8 @@ defmodule Project73.Profile.Actor do
     {:ok, %__MODULE__{aggregate: Aggregate.empty()}}
   end
 
-  def start_link(auction_id) do
-    GenServer.start_link(__MODULE__, auction_id, name: via_tuple(auction_id))
+  def start_link(id) do
+    GenServer.start_link(__MODULE__, id, name: via_tuple(id))
   end
 
   def create(pid, %Command.Create{} = cmd) do

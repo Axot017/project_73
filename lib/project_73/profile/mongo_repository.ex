@@ -9,7 +9,7 @@ defmodule Project73.Profile.MongoRepository do
   @collection "profile_events"
 
   def save_events(id, events) do
-    Logger.debug("Saving events: #{inspect(events)}")
+    Logger.debug("Saving profile events: #{inspect(events)}")
     first_event = hd(events)
     %{sequence_number: version} = first_event
 
