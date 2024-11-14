@@ -40,9 +40,10 @@ defmodule Project73Web.AuthController do
 
   def delete(conn, _params) do
     conn
+    |> delete_session(:user_id)
     |> delete_session(:current_user)
     |> put_flash(:info, "Logged out.")
-    |> redirect(to: ~p"/auction")
+    |> redirect(to: ~p"/")
   end
 
   defp success(conn, user_id) do
@@ -50,6 +51,6 @@ defmodule Project73Web.AuthController do
     |> put_flash(:info, "Successfully authenticated.")
     |> put_session(:user_id, user_id)
     |> configure_session(renew: true)
-    |> redirect(to: ~p"/auction")
+    |> redirect(to: ~p"/")
   end
 end

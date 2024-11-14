@@ -28,9 +28,8 @@ defmodule Project73Web.Router do
   scope "/", Project73Web do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", HomeLive
     get "/login", PageController, :login
-    live "/auction", AuctionLive
     live "/auction/new", NewAuctionLive
 
     scope "/auth" do

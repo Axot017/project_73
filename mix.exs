@@ -65,7 +65,8 @@ defmodule Project73.MixProject do
       {:ueberauth_facebook, "~> 0.10"},
       {:stripity_stripe, "~> 3.2"},
       {:decimal, "~> 2.1"},
-      {:dialyxir, "~> 1.4", only: [:dev], runtime: false}
+      {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
+      {:horde, "~> 0.9.0"}
     ]
   end
 

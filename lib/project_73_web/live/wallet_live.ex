@@ -50,7 +50,7 @@ defmodule Project73Web.WalletLive do
           const { error, paymentMethod } = await stripe.confirmPayment({
             elements,
             confirmParams: {
-              return_url: "http://localhost:4000/auction",
+              return_url: "http://localhost:4000/",
             },
           });
 

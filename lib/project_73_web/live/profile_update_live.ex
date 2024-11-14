@@ -58,7 +58,7 @@ defmodule Project73Web.ProfileUpdateLive do
 
     case Profile.Actor.update_profile(socket.assigns.actor_pid, cmd) do
       :ok ->
-        {:noreply, redirect(socket, to: ~p"/auction")}
+        {:noreply, redirect(socket, to: ~p"/")}
 
       {:error, {:validation, errors}} ->
         translated_errors = I18n.translate_errors(errors)
