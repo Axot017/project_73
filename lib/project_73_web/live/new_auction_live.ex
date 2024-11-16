@@ -2,11 +2,10 @@ defmodule Project73Web.NewAuctionLive do
   require Logger
   use Project73Web, :live_view
 
-  def mount(_params, session, socket) do
+  def mount(_params, _session, socket) do
     {:ok,
      socket
      |> assign(
-       current_user: session["current_user"],
        form:
          to_form(%{
            "title" => "",

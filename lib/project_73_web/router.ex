@@ -28,20 +28,26 @@ defmodule Project73Web.Router do
   scope "/", Project73Web do
     pipe_through :browser
 
-    live "/", HomeLive
+    live_session :public, on_mount: {Project73Web.LiveUserInjector, :public} do
+      live "/", HomeLive
+
+      scope "/profile" do
+        live "/update", ProfileUpdateLive
+        live "/wallet", WalletLive
+      end
+    end
+
+    live_session :authorized, on_mount: {Project73Web.LiveUserInjector, :authorized} do
+      live "/auction/new", NewAuctionLive
+    end
+
     get "/login", PageController, :login
-    live "/auction/new", NewAuctionLive
 
     scope "/auth" do
       delete "/logout", AuthController, :delete
 
       get "/:provider", AuthController, :request
       get "/:provider/callback", AuthController, :callback
-    end
-
-    scope "/profile" do
-      live "/update", ProfileUpdateLive
-      live "/wallet", WalletLive
     end
   end
 

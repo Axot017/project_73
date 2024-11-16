@@ -1,6 +1,7 @@
 defmodule Project73Web.LiveUserInjector do
   import Phoenix.Component
   import Phoenix.LiveView
+  use Project73Web, :verified_routes
   alias Project73.Profile
   require Logger
 
@@ -21,7 +22,7 @@ defmodule Project73Web.LiveUserInjector do
   end
 
   def on_mount(:public, _params, _session, socket) do
-    socket
+    {:cont, socket |> assign(:current_user, nil)}
   end
 
   def on_mount(:authorized, _params, %{"user_id" => user_id}, socket) when is_binary(user_id) do
@@ -31,7 +32,7 @@ defmodule Project73Web.LiveUserInjector do
 
       _ ->
         case get_profile(user_id) do
-          nil -> {:halt, socket |> redirect(to: "/login")}
+          nil -> {:halt, socket |> redirect(to: ~p"/login")}
           user -> {:cont, socket |> assign(:current_user, user)}
         end
     end
@@ -44,4 +45,3 @@ defmodule Project73Web.LiveUserInjector do
     end
   end
 end
-

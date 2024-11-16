@@ -5,14 +5,12 @@ defmodule Project73Web.WalletLive do
 
   @stripe_public_key System.get_env("STRIPE_PUBLISHABLE_KEY")
 
-  def mount(_params, %{"current_user" => profile}, socket) do
-    Logger.debug("Profile loaded: #{inspect(profile)}")
-    {:ok, pid} = Profile.Supervisor.get_actor(profile.id)
+  def mount(_params, _session, socket) do
+    {:ok, pid} = Profile.Supervisor.get_actor(socket.assigns.current_user.id)
 
     {:ok,
      socket
      |> assign(
-       current_user: profile,
        actor_pid: pid,
        amount_to_deposit: nil,
        stripe_public_key: @stripe_public_key
