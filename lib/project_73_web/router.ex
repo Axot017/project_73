@@ -31,6 +31,8 @@ defmodule Project73Web.Router do
     live_session :public, on_mount: {Project73Web.LiveUserInjector, :public} do
       live "/", HomeLive
 
+      live "/login", LoginLive
+
       scope "/profile" do
         live "/update", ProfileUpdateLive
         live "/wallet", WalletLive
@@ -40,8 +42,6 @@ defmodule Project73Web.Router do
     live_session :authorized, on_mount: {Project73Web.LiveUserInjector, :authorized} do
       live "/auction/new", NewAuctionLive
     end
-
-    get "/login", PageController, :login
 
     scope "/auth" do
       delete "/logout", AuthController, :delete

@@ -9,7 +9,7 @@ defmodule Project73.Auction.MongoRepository do
   @collection "auction_events"
 
   def save_events(id, events) do
-    Logger.debug(%{"message" => "Saving auction events", "events" => events, "id" => id})
+    Logger.debug(%{message: "Saving auction events", events: events, id: id})
     first_event = hd(events)
     %{sequence_number: version} = first_event
 
@@ -33,9 +33,9 @@ defmodule Project73.Auction.MongoRepository do
 
       {:error, reason} ->
         Logger.error(%{
-          "message" => "Failed to save auction events",
-          "reason" => reason,
-          "id" => id
+          message: "Failed to save auction events",
+          reason: reason,
+          id: id
         })
 
         {:error, reason}
@@ -49,9 +49,9 @@ defmodule Project73.Auction.MongoRepository do
     case result do
       {:error, reason} ->
         Logger.error(%{
-          "message" => "Failed to load auction aggregate",
-          "reason" => reason,
-          "id" => id
+          message: "Failed to load auction aggregate",
+          reason: reason,
+          id: id
         })
 
         {:error, reason}
@@ -70,7 +70,7 @@ defmodule Project73.Auction.MongoRepository do
             Project73.Profile.Aggregate.empty()
             |> Project73.Profile.Aggregate.apply(events)
 
-          Logger.debug(%{"message" => "Loaded auction aggregate", "aggregate" => aggregate})
+          Logger.debug(%{message: "Loaded auction aggregate", aggregate: aggregate})
 
           {:ok, aggregate}
         end
