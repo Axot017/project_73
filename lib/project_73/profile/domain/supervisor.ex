@@ -1,21 +1,22 @@
 defmodule Project73.Profile.Domain.Supervisor do
-  use DynamicSupervisor
+  use Horde.DynamicSupervisor
 
-  def start_link(_args) do
-    DynamicSupervisor.start_link(__MODULE__, :ok, name: __MODULE__)
+  def start_link(args) do
+    Horde.DynamicSupervisor.start_link(__MODULE__, args, name: __MODULE__)
   end
 
+  @impl true
   def init(_args) do
-    DynamicSupervisor.init(strategy: :one_for_one)
+    Horde.DynamicSupervisor.init(strategy: :one_for_one)
   end
 
   def get_actor(profile_id) do
-    case Registry.lookup(:profile_registry, profile_id) do
+    case Horde.Registry.lookup(:profile_registry, profile_id) do
       [{pid, _}] ->
         {:ok, pid}
 
       [] ->
-        case DynamicSupervisor.start_child(
+        case Horde.DynamicSupervisor.start_child(
                __MODULE__,
                {Project73.Profile.Domain.Actor, profile_id}
              ) do

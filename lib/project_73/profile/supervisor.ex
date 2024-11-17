@@ -8,7 +8,7 @@ defmodule Project73.Profile.Supervisor do
   @impl true
   def init(_opts) do
     children = [
-      {Registry, keys: :unique, name: :profile_registry},
+      {Horde.Registry, keys: :unique, name: :profile_registry},
       {Project73.Profile.Domain.Supervisor, []}
     ]
 

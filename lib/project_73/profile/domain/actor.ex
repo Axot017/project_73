@@ -41,7 +41,7 @@ defmodule Project73.Profile.Domain.Actor do
   end
 
   defp via_tuple(user_id) do
-    {:via, Registry, {:profile_registry, user_id}}
+    {:via, Horde.Registry, {:profile_registry, user_id}}
   end
 
   def handle_call({:create, %Command.Create{} = cmd}, _from, state) do
