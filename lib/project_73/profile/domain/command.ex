@@ -1,6 +1,5 @@
-defmodule Project73.Profile.Command do
-  alias Project73.Profile.Command.Create
-  alias Project73.Profile.Command
+defmodule Project73.Profile.Domain.Command do
+  alias Project73.Profile.Domain.Command
   use Project73.Utils.ValidatedStruct
 
   @type t() ::

@@ -1,7 +1,7 @@
-defmodule Project73.Profile.Actor do
+defmodule Project73.Profile.Domain.Actor do
   use GenServer
-  alias Project73.Profile.Command
-  alias Project73.Profile.Aggregate
+  alias Project73.Profile.Domain.Command
+  alias Project73.Profile.Domain.Aggregate
   require Logger
 
   @type t :: %__MODULE__{aggregate: Aggregate.t()}

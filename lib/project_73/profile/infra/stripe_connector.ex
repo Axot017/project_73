@@ -1,5 +1,5 @@
-defmodule Project73.Profile.StripeConnector do
-  @behaviour Project73.Profile.PaymentProvider
+defmodule Project73.Profile.Infra.StripeConnector do
+  @behaviour Project73.Profile.Domain.PaymentProvider
   alias Project73.Utils.Json
   require Logger
 

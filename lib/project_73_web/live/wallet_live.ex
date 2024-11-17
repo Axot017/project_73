@@ -6,7 +6,7 @@ defmodule Project73Web.WalletLive do
   @stripe_public_key System.get_env("STRIPE_PUBLISHABLE_KEY")
 
   def mount(_params, _session, socket) do
-    {:ok, pid} = Profile.Supervisor.get_actor(socket.assigns.current_user.id)
+    {:ok, pid} = Profile.Domain.Supervisor.get_actor(socket.assigns.current_user.id)
 
     {:ok,
      socket
@@ -19,7 +19,7 @@ defmodule Project73Web.WalletLive do
 
   def handle_event("deposit", _params, socket) do
     pid = socket.assigns.actor_pid
-    {:ok, deposit_data} = Profile.Actor.request_deposit(pid, Decimal.new("1000.00"))
+    {:ok, deposit_data} = Profile.Domain.Actor.request_deposit(pid, Decimal.new("1000.00"))
     Logger.debug("Deposit data: #{inspect(deposit_data)}")
 
     {:noreply,

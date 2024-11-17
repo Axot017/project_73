@@ -1,5 +1,5 @@
-defmodule Project73.Profile.Event do
-  alias Project73.Profile.Event
+defmodule Project73.Profile.Domain.Event do
+  alias Project73.Profile.Domain.Event
 
   @type t ::
           Event.Created.t()

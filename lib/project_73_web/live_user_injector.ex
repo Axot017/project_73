@@ -39,8 +39,8 @@ defmodule Project73Web.LiveUserInjector do
   end
 
   defp get_profile(user_id) when is_binary(user_id) do
-    case Profile.Supervisor.get_actor(user_id) do
-      {:ok, pid} -> Profile.Actor.get_profile(pid)
+    case Profile.Domain.Supervisor.get_actor(user_id) do
+      {:ok, pid} -> Profile.Domain.Actor.get_profile(pid)
       _ -> nil
     end
   end

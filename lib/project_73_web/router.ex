@@ -10,8 +10,7 @@ defmodule Project73Web.Router do
     plug :put_secure_browser_headers
 
     plug Project73Web.Plug.SetLanguage
-    plug Project73Web.Plug.FetchProfile
-    plug Project73Web.Plug.CheckProfile
+    # plug Project73Web.Plug.CheckProfile
   end
 
   pipeline :api do

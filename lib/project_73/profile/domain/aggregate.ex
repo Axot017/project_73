@@ -1,7 +1,7 @@
-defmodule Project73.Profile.Aggregate do
+defmodule Project73.Profile.Domain.Aggregate do
   require Logger
-  alias Project73.Profile.Event
-  alias Project73.Profile.Command
+  alias Project73.Profile.Domain.Event
+  alias Project73.Profile.Domain.Command
 
   @type t :: %__MODULE__{
           id: String.t(),

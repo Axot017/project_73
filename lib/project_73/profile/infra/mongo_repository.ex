@@ -1,10 +1,11 @@
-defmodule Project73.Profile.MongoRepository do
-  alias Project73.Profile.Event
+defmodule Project73.Profile.Infra.MongoRepository do
+  alias Project73.Profile.Domain.Event
+  alias Project73.Profile.Domain.Aggregate
   alias Project73.Utils
   require Logger
   use Project73.Utils.Json
 
-  @behaviour Project73.Profile.Repository
+  @behaviour Project73.Profile.Domain.Repository
 
   @collection "profile_events"
 
@@ -57,8 +58,8 @@ defmodule Project73.Profile.MongoRepository do
           :ok
         else
           aggregate =
-            Project73.Profile.Aggregate.empty()
-            |> Project73.Profile.Aggregate.apply(events)
+            Aggregate.empty()
+            |> Aggregate.apply(events)
 
           Logger.debug("Loaded aggregate #{inspect(aggregate)}")
           {:ok, aggregate}

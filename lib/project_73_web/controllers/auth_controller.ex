@@ -1,5 +1,5 @@
 defmodule Project73Web.AuthController do
-  alias Project73.Profile.Command
+  alias Project73.Profile.Domain.Command
   require Logger
   use Project73Web, :controller
   plug Ueberauth
@@ -14,12 +14,12 @@ defmodule Project73Web.AuthController do
     id = auth.uid
     email = auth.info.email
     provider = Atom.to_string(auth.provider)
-    provider_id = Project73.Profile.Aggregate.provider_id(provider, id)
+    provider_id = Project73.Profile.Domain.Aggregate.provider_id(provider, id)
     Logger.debug("Auth details: #{inspect(auth)}")
 
-    with {:ok, pid} <- Project73.Profile.Supervisor.get_actor(provider_id),
+    with {:ok, pid} <- Project73.Profile.Domain.Supervisor.get_actor(provider_id),
          :ok <-
-           Project73.Profile.Actor.create(pid, %Command.Create{
+           Project73.Profile.Domain.Actor.create(pid, %Command.Create{
              id: provider_id,
              provider: provider,
              email: email

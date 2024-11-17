@@ -1,5 +1,5 @@
 defmodule Project73.Auction.MongoRepository do
-  alias Project73.Profile.Event
+  alias Project73.Auction.Event
   alias Project73.Utils
   use Project73.Utils.Json
   require Logger
@@ -67,8 +67,8 @@ defmodule Project73.Auction.MongoRepository do
           :ok
         else
           aggregate =
-            Project73.Profile.Aggregate.empty()
-            |> Project73.Profile.Aggregate.apply(events)
+            Project73.Auction.Aggregate.empty()
+            |> Project73.Auction.Aggregate.apply(events)
 
           Logger.debug(%{message: "Loaded auction aggregate", aggregate: aggregate})
 

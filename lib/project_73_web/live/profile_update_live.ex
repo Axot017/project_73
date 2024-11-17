@@ -2,13 +2,13 @@ defmodule Project73Web.ProfileUpdateLive do
   require Logger
   alias Project73Web.I18n
   alias Project73.Shared.Address
-  alias Project73.Profile.Command
+  alias Project73.Profile.Domain.Command
   alias Project73.Profile
   use Project73Web, :live_view
 
   def mount(_params, %{"current_user" => profile}, socket) do
     Logger.debug("Profile loaded: #{inspect(profile)}")
-    {:ok, pid} = Profile.Supervisor.get_actor(profile.id)
+    {:ok, pid} = Profile.Domain.Supervisor.get_actor(profile.id)
 
     {:ok,
      socket
@@ -56,7 +56,7 @@ defmodule Project73Web.ProfileUpdateLive do
       }
     }
 
-    case Profile.Actor.update_profile(socket.assigns.actor_pid, cmd) do
+    case Profile.Domain.Actor.update_profile(socket.assigns.actor_pid, cmd) do
       :ok ->
         {:noreply, redirect(socket, to: ~p"/")}
 

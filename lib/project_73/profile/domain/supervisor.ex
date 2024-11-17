@@ -1,11 +1,11 @@
-defmodule Project73.Profile.Supervisor do
+defmodule Project73.Profile.Domain.Supervisor do
   use DynamicSupervisor
 
   def start_link(_args) do
     DynamicSupervisor.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
-  def init(:ok) do
+  def init(_args) do
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 
@@ -15,7 +15,10 @@ defmodule Project73.Profile.Supervisor do
         {:ok, pid}
 
       [] ->
-        case DynamicSupervisor.start_child(__MODULE__, {Project73.Profile.Actor, profile_id}) do
+        case DynamicSupervisor.start_child(
+               __MODULE__,
+               {Project73.Profile.Domain.Actor, profile_id}
+             ) do
           {:ok, pid} ->
             {:ok, pid}
 
