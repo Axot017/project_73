@@ -9,12 +9,9 @@ defmodule Project73.Application do
       {Finch, name: Project73.Finch},
       {Phoenix.PubSub, name: Project73.PubSub},
       Project73Web.Endpoint,
-
-      # Auction
+      {Project73.Profile.Supervisor, []},
       {Registry, keys: :unique, name: :auction_registry},
       {Project73.Auction.Supervisor, []},
-      {Registry, keys: :unique, name: :profile_registry},
-      {Project73.Profile.Domain.Supervisor, []},
       {Mongo, Application.get_env(:project_73, :mongo) || []}
     ]
 
