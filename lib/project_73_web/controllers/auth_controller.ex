@@ -17,7 +17,7 @@ defmodule Project73Web.AuthController do
     provider_id = Project73.Profile.Domain.Aggregate.provider_id(provider, id)
     Logger.debug("Auth details: #{inspect(auth)}")
 
-    with {:ok, pid} <- Project73.Profile.Domain.Supervisor.get_actor(provider_id),
+    with {:ok, pid} <- Project73.Profile.Domain.Actor.get_or_create(provider_id),
          :ok <-
            Project73.Profile.Domain.Actor.create(pid, %Command.Create{
              id: provider_id,

@@ -49,6 +49,7 @@ defmodule Project73.MixProject do
        app: false,
        compile: false,
        depth: 1},
+      {:highlander, "~> 0.2.1"},
       {:horde, "~> 0.9.0"},
       {:logger_json, "~> 6.1"},
       {:mongodb_driver, "~> 1.4.1"},

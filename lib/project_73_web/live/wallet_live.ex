@@ -6,7 +6,7 @@ defmodule Project73Web.WalletLive do
   @stripe_public_key System.get_env("STRIPE_PUBLISHABLE_KEY")
 
   def mount(_params, _session, socket) do
-    {:ok, pid} = Profile.Domain.Supervisor.get_actor(socket.assigns.current_user.id)
+    {:ok, pid} = Profile.Domain.Actor.get_or_create(socket.assigns.current_user.id)
 
     {:ok,
      socket

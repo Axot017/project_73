@@ -39,7 +39,7 @@ defmodule Project73Web.Plug.CheckProfile do
   end
 
   defp create_payment_account(conn, profile) do
-    {:ok, pid} = Profile.Domain.Supervisor.get_actor(profile.id)
+    {:ok, pid} = Profile.Domain.Actor.get_or_create(profile.id)
 
     case Profile.Domain.Actor.create_payment_account(pid) do
       :ok ->

@@ -8,7 +8,7 @@ defmodule Project73Web.ProfileUpdateLive do
 
   def mount(_params, %{"current_user" => profile}, socket) do
     Logger.debug("Profile loaded: #{inspect(profile)}")
-    {:ok, pid} = Profile.Domain.Supervisor.get_actor(profile.id)
+    {:ok, pid} = Profile.Domain.Actor.get_or_create(profile.id)
 
     {:ok,
      socket

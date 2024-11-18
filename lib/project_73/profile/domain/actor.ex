@@ -1,5 +1,5 @@
 defmodule Project73.Profile.Domain.Actor do
-  use GenServer
+  use GenServer, restart: :transient
   alias Project73.Profile.Domain.Command
   alias Project73.Profile.Domain.Aggregate
   require Logger
@@ -10,6 +10,28 @@ defmodule Project73.Profile.Domain.Actor do
 
   @repository Application.compile_env(:project_73, :profile_repository)
   @payment_provider Application.compile_env(:project_73, :payment_provider)
+
+  def get_or_create(profile_id) do
+    case Horde.Registry.lookup(Project73.Profile.Domain.Registry, profile_id) do
+      [{pid, _}] ->
+        {:ok, pid}
+
+      [] ->
+        case Horde.DynamicSupervisor.start_child(
+               Project73.Profile.Domain.Supervisor,
+               {__MODULE__, profile_id}
+             ) do
+          {:ok, pid} ->
+            {:ok, pid}
+
+          {:error, {:already_started, pid}} ->
+            {:ok, pid}
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+    end
+  end
 
   def init(id) do
     GenServer.cast(self(), {:load, id})
@@ -41,7 +63,7 @@ defmodule Project73.Profile.Domain.Actor do
   end
 
   defp via_tuple(user_id) do
-    {:via, Horde.Registry, {:profile_registry, user_id}}
+    {:via, Horde.Registry, {Project73.Profile.Domain.Registry, user_id}}
   end
 
   def handle_call({:create, %Command.Create{} = cmd}, _from, state) do
