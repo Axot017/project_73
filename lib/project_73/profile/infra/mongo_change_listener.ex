@@ -1,13 +1,16 @@
 defmodule Project73.Profile.Infra.MongoChangeListener do
-  use GenServer
+  use Task
   require Logger
 
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, :ok, opts)
+  def start_link(_) do
+    Task.start_link(&listen/0)
   end
 
-  def init(:ok) do
-    Logger.info("Starting MongoChangeListener")
-    {:ok, %{}}
+  defp listen() do
+    Logger.info("Listening for changes")
+
+    stream = Mongo.watch_collection(:mongo, "profile_events", [])
+
+    Enum.each(stream, fn doc -> Logger.debug("Received change: #{inspect(doc)}") end)
   end
 end

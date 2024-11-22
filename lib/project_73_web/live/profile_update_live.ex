@@ -6,7 +6,8 @@ defmodule Project73Web.ProfileUpdateLive do
   alias Project73.Profile
   use Project73Web, :live_view
 
-  def mount(_params, %{"current_user" => profile}, socket) do
+  def mount(_params, _session, socket) do
+    profile = socket.assigns.current_user
     Logger.debug("Profile loaded: #{inspect(profile)}")
     {:ok, pid} = Profile.Domain.Actor.get_or_create(profile.id)
 
