@@ -11,3 +11,10 @@ services:
       start_period: 0s
       start_interval: 1s
       retries: 30
+
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: project73
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
