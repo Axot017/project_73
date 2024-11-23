@@ -12,7 +12,8 @@ defmodule Project73.Application do
       {Project73.Profile.Supervisor, name: Project73.Profile.Supervisor},
       {Registry, keys: :unique, name: :auction_registry},
       {Project73.Auction.Supervisor, []},
-      {Mongo, Application.get_env(:project_73, :mongo) || []}
+      {Mongo, Application.get_env(:project_73, :mongo) || []},
+      Project73.Repo
     ]
 
     opts = [strategy: :one_for_one, name: Project73.Supervisor]

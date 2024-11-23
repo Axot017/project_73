@@ -72,6 +72,14 @@ config :project_73, :mongo,
   pool_size: 10,
   name: :mongo
 
+config :project_73, Project73.Repo,
+  database: "project73",
+  username: "user",
+  password: "password",
+  hostname: "localhost"
+
+config :project_73, ecto_repos: [Project73.Repo]
+
 config :ueberauth, Ueberauth,
   json_library: Poison,
   providers: [
