@@ -37,6 +37,7 @@ defmodule Project73.MixProject do
       {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
       {:dns_cluster, "~> 0.1.1"},
       {:ecto_sql, "~> 3.12"},
+      {:ecto_psql_extras, "~> 0.8"},
       {:ecto_ulid_next, "~> 1.0.2"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
       {:finch, "~> 0.13"},
