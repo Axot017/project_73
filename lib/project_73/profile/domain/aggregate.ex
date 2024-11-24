@@ -111,6 +111,7 @@ defmodule Project73.Profile.Domain.Aggregate do
       false ->
         [
           %Event.UsernameChanged{
+            id: self.id,
             username: username,
             timestamp: DateTime.utc_now(),
             sequence_number: self.version + 1
@@ -127,6 +128,7 @@ defmodule Project73.Profile.Domain.Aggregate do
       false ->
         [
           %Event.FirstNameChanged{
+            id: self.id,
             first_name: first_name,
             timestamp: DateTime.utc_now(),
             sequence_number: self.version + 1
@@ -143,6 +145,7 @@ defmodule Project73.Profile.Domain.Aggregate do
       false ->
         [
           %Event.LastNameChanged{
+            id: self.id,
             last_name: last_name,
             timestamp: DateTime.utc_now(),
             sequence_number: self.version + 1
@@ -159,6 +162,7 @@ defmodule Project73.Profile.Domain.Aggregate do
       false ->
         [
           %Event.AddressChanged{
+            id: self.id,
             address: address,
             timestamp: DateTime.utc_now(),
             sequence_number: self.version + 1
