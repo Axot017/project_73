@@ -50,72 +50,76 @@ defmodule Project73.Profile.Infra.MongoChangeListener do
     Logger.debug("Saving username changed event: #{inspect(event)}")
     timestamp = DateTime.truncate(event.timestamp, :second)
 
-    from(p in Profile,
-      where: p.id == ^event.id and p.version == ^event.sequence_number - 1,
-      update: [
-        set: [
-          username: ^event.username,
-          version: ^event.sequence_number,
-          updated_at: ^timestamp
+    {1, _} =
+      from(p in Profile,
+        where: p.id == ^event.id and p.version == ^event.sequence_number - 1,
+        update: [
+          set: [
+            username: ^event.username,
+            version: ^event.sequence_number,
+            updated_at: ^timestamp
+          ]
         ]
-      ]
-    )
-    |> Project73.Repo.update_all([])
+      )
+      |> Project73.Repo.update_all([])
   end
 
   defp save(%Event.FirstNameChanged{} = event) do
     Logger.debug("Saving first name changed event: #{inspect(event)}")
     timestamp = DateTime.truncate(event.timestamp, :second)
 
-    from(p in Profile,
-      where: p.id == ^event.id and p.version == ^event.sequence_number - 1,
-      update: [
-        set: [
-          first_name: ^event.first_name,
-          version: ^event.sequence_number,
-          updated_at: ^timestamp
+    {1, _} =
+      from(p in Profile,
+        where: p.id == ^event.id and p.version == ^event.sequence_number - 1,
+        update: [
+          set: [
+            first_name: ^event.first_name,
+            version: ^event.sequence_number,
+            updated_at: ^timestamp
+          ]
         ]
-      ]
-    )
-    |> Project73.Repo.update_all([])
+      )
+      |> Project73.Repo.update_all([])
   end
 
   defp save(%Event.LastNameChanged{} = event) do
     Logger.debug("Saving last name changed event: #{inspect(event)}")
     timestamp = DateTime.truncate(event.timestamp, :second)
 
-    from(p in Profile,
-      where: p.id == ^event.id and p.version == ^event.sequence_number - 1,
-      update: [
-        set: [
-          last_name: ^event.last_name,
-          version: ^event.sequence_number,
-          updated_at: ^timestamp
+    {1, _} =
+      from(p in Profile,
+        where: p.id == ^event.id and p.version == ^event.sequence_number - 1,
+        update: [
+          set: [
+            last_name: ^event.last_name,
+            version: ^event.sequence_number,
+            updated_at: ^timestamp
+          ]
         ]
-      ]
-    )
-    |> Project73.Repo.update_all([])
+      )
+      |> Project73.Repo.update_all([])
   end
 
   defp save(%Event.AddressChanged{} = event) do
     Logger.debug("Saving address changed event: #{inspect(event)}")
     timestamp = DateTime.truncate(event.timestamp, :second)
 
-    from(p in Profile,
-      where: p.id == ^event.id and p.version == ^event.sequence_number - 1,
-      update: [
-        set: [
-          address_line1: ^event.address.line1,
-          address_line2: ^event.address.line2,
-          city: ^event.address.city,
-          country: ^event.address.country,
-          postal_code: ^event.address.postal_code,
-          version: ^event.sequence_number,
-          updated_at: ^timestamp
+    {1, _} =
+      from(p in Profile,
+        where: p.id == ^event.id and p.version == ^event.sequence_number - 1,
+        update: [
+          set: [
+            address_line1: ^event.address.line1,
+            address_line2: ^event.address.line2,
+            city: ^event.address.city,
+            country: ^event.address.country,
+            postal_code: ^event.address.postal_code,
+            version: ^event.sequence_number,
+            updated_at: ^timestamp
+          ]
         ]
-      ]
-    )
-    |> Project73.Repo.update_all([])
+      )
+      |> Project73.Repo.update_all([])
   end
 
   defp save(event) do
