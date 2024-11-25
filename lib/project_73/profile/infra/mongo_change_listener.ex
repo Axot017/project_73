@@ -1,5 +1,5 @@
 defmodule Project73.Profile.Infra.MongoChangeListener do
-  use Task
+  use Task, restart: :permanent
   alias Project73.Profile.Infra.Mapper
   alias Project73.Profile.Domain.Event
   alias Project73.View.Model.Profile
