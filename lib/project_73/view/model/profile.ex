@@ -1,4 +1,4 @@
-defmodule Project73.View.Profile do
+defmodule Project73.View.Model.Profile do
   use Ecto.Schema
 
   @primary_key false

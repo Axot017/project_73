@@ -2,6 +2,7 @@ defmodule Project73.Profile.Infra.MongoChangeListener do
   use Task
   alias Project73.Profile.Infra.Mapper
   alias Project73.Profile.Domain.Event
+  alias Project73.View.Model.Profile
   require Logger
   import Ecto.Query, only: [from: 2]
 
@@ -34,7 +35,7 @@ defmodule Project73.Profile.Infra.MongoChangeListener do
     Logger.debug("Saving profile created event: #{inspect(event)}")
     timestamp = DateTime.truncate(event.timestamp, :second)
 
-    Project73.Repo.insert(%Project73.View.Profile{
+    Project73.Repo.insert(%Profile{
       id: event.id,
       provider: event.provider,
       email: event.email,
@@ -49,7 +50,7 @@ defmodule Project73.Profile.Infra.MongoChangeListener do
     Logger.debug("Saving username changed event: #{inspect(event)}")
     timestamp = DateTime.truncate(event.timestamp, :second)
 
-    from(p in Project73.View.Profile,
+    from(p in Profile,
       where: p.id == ^event.id and p.version == ^event.sequence_number - 1,
       update: [
         set: [
@@ -66,7 +67,7 @@ defmodule Project73.Profile.Infra.MongoChangeListener do
     Logger.debug("Saving first name changed event: #{inspect(event)}")
     timestamp = DateTime.truncate(event.timestamp, :second)
 
-    from(p in Project73.View.Profile,
+    from(p in Profile,
       where: p.id == ^event.id and p.version == ^event.sequence_number - 1,
       update: [
         set: [
@@ -83,7 +84,7 @@ defmodule Project73.Profile.Infra.MongoChangeListener do
     Logger.debug("Saving last name changed event: #{inspect(event)}")
     timestamp = DateTime.truncate(event.timestamp, :second)
 
-    from(p in Project73.View.Profile,
+    from(p in Profile,
       where: p.id == ^event.id and p.version == ^event.sequence_number - 1,
       update: [
         set: [
@@ -100,7 +101,7 @@ defmodule Project73.Profile.Infra.MongoChangeListener do
     Logger.debug("Saving address changed event: #{inspect(event)}")
     timestamp = DateTime.truncate(event.timestamp, :second)
 
-    from(p in Project73.View.Profile,
+    from(p in Profile,
       where: p.id == ^event.id and p.version == ^event.sequence_number - 1,
       update: [
         set: [

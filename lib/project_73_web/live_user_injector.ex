@@ -2,7 +2,6 @@ defmodule Project73Web.LiveUserInjector do
   import Phoenix.Component
   import Phoenix.LiveView
   use Project73Web, :verified_routes
-  alias Project73.Profile
   require Logger
 
   def on_mount(:public, _params, %{"user_id" => user_id}, socket) when is_binary(user_id) do
@@ -39,9 +38,6 @@ defmodule Project73Web.LiveUserInjector do
   end
 
   defp get_profile(user_id) when is_binary(user_id) do
-    case Profile.Domain.Actor.get_or_create(user_id) do
-      {:ok, pid} -> Profile.Domain.Actor.get_profile(pid)
-      _ -> nil
-    end
+    Project73.View.Repository.find_profile_by_id(user_id)
   end
 end

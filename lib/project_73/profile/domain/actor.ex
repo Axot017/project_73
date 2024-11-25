@@ -58,10 +58,6 @@ defmodule Project73.Profile.Domain.Actor do
     GenServer.call(pid, {:request_deposit, amount})
   end
 
-  def get_profile(pid) do
-    GenServer.call(pid, :get_profile)
-  end
-
   defp via_tuple(user_id) do
     {:via, Horde.Registry, {Project73.Profile.Domain.Registry, user_id}}
   end
@@ -102,10 +98,6 @@ defmodule Project73.Profile.Domain.Actor do
       {:error, _} = error ->
         {:reply, error, state}
     end
-  end
-
-  def handle_call(:get_profile, _from, state) do
-    {:reply, state.aggregate, state}
   end
 
   def handle_call({:request_deposit, amount}, _from, state) do
