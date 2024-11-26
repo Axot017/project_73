@@ -21,6 +21,12 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
 
+  rabbitmq:
+    image: rabbitmq:4
+    ports:
+      - 5672:5672
+      - 15672:15672
+
   adminer:
     image: adminer
     restart: always
