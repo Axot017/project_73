@@ -22,10 +22,13 @@ services:
       POSTGRES_PASSWORD: password
 
   rabbitmq:
-    image: rabbitmq:4
+    image: rabbitmq:4-management
     ports:
       - 5672:5672
       - 15672:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
 
   adminer:
     image: adminer
