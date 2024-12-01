@@ -32,6 +32,7 @@ defmodule Project73.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:amqp, "~> 4.0"},
       {:bandit, "~> 1.5"},
       {:decimal, "~> 2.1"},
       {:dialyxir, "~> 1.4", only: [:dev], runtime: false},

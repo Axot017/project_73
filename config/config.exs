@@ -86,3 +86,15 @@ config :ueberauth, Ueberauth,
     google: {Ueberauth.Strategy.Google, []},
     facebook: {Ueberauth.Strategy.Facebook, []}
   ]
+
+config :amqp,
+  connections: [
+    project_73_connection: [
+      url: "amqp://user:password@localhost:5672"
+    ]
+  ],
+  channels: [
+    project_73_channel: [
+      connection: :project_73_connection
+    ]
+  ]
