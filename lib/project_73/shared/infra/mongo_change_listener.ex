@@ -10,8 +10,6 @@ defmodule Project73.Shared.Infra.MongoChangeListener do
     module_name = __MODULE__
 
     quote do
-      require Logger
-
       use Task, restart: :permanent
 
       @collection unquote(collection)
