@@ -6,19 +6,10 @@ defmodule Project73Web.LiveUserInjector do
   require Logger
 
   def on_mount(:public, _params, %{"user_id" => user_id}, socket) when is_binary(user_id) do
-    socket =
-      case socket.assigns do
-        %{current_user: _current_user} ->
-          socket
-
-        _ ->
-          case get_profile(user_id) do
-            nil -> socket
-            user -> socket |> assign(:current_user, user)
-          end
-      end
-
-    {:cont, socket}
+    {:cont, socket |> assign(:user_id, user_id)}
+    |> include_current_user()
+    |> setup_account()
+    |> create_payment_account()
   end
 
   def on_mount(:public, _params, _session, socket) do
@@ -26,22 +17,93 @@ defmodule Project73Web.LiveUserInjector do
   end
 
   def on_mount(:authorized, _params, %{"user_id" => user_id}, socket) when is_binary(user_id) do
-    case socket.assigns do
-      %{current_user: _current_user} ->
+    {:cont, socket |> assign(:user_id, user_id)}
+    |> include_current_user()
+    |> require_current_user()
+    |> setup_account()
+    |> create_payment_account()
+  end
+
+  def on_mount(:authorized, _params, _session, socket) do
+    {:halt, socket |> redirect(to: ~p"/login")}
+  end
+
+  defp setup_account({:cont, %{view: Project73Web.ProfileUpdateLive} = socket}) do
+    {:cont, socket}
+  end
+
+  defp setup_account({:cont, %{assigns: %{current_user: current_user}} = socket}) do
+    need_setup = Profile.Domain.Aggregate.needs_setup(current_user)
+
+    profile_update_path = ~p"/profile/update"
+
+    case need_setup do
+      true ->
+        {:halt, socket |> redirect(to: profile_update_path)}
+
+      false ->
         {:cont, socket}
+    end
+  end
+
+  defp setup_account({:cont, socket}) do
+    {:cont, socket}
+  end
+
+  defp setup_account({:halt, _conn} = res) do
+    res
+  end
+
+  defp require_current_user({:cont, %{assigns: %{current_user: _current_user}} = socket}) do
+    {:cont, socket}
+  end
+
+  defp require_current_user({:cont, socket}) do
+    {:halt, socket |> redirect(to: ~p"/login")}
+  end
+
+  defp require_current_user({:halt, _conn} = res) do
+    res
+  end
+
+  defp include_current_user({:cont, %{assigns: %{current_user: _current_user}} = socket}) do
+    {:cont, socket}
+  end
+
+  defp include_current_user({:cont, %{assigns: %{user_id: user_id}} = socket}) do
+    case Profile.Domain.Actor.get_or_create(user_id) do
+      {:ok, pid} ->
+        {:cont, socket |> assign(:current_user, Profile.Domain.Actor.get_profile(pid))}
 
       _ ->
-        case get_profile(user_id) do
-          nil -> {:halt, socket |> redirect(to: ~p"/login")}
-          user -> {:cont, socket |> assign(:current_user, user)}
+        {:cont, socket}
+    end
+  end
+
+  defp include_current_user(res) do
+    res
+  end
+
+  defp create_payment_account({:cont, %{assigns: %{current_user: current_user}} = socket}) do
+    {:ok, pid} = Profile.Domain.Actor.get_or_create(current_user.id)
+    need_setup = Profile.Domain.Aggregate.needs_setup(current_user)
+
+    case need_setup do
+      true ->
+        {:cont, socket}
+
+      false ->
+        case Profile.Domain.Actor.create_payment_account(pid) do
+          :ok ->
+            {:cont, socket}
+
+          _ ->
+            {:halt, socket |> redirect(to: ~p"/")}
         end
     end
   end
 
-  defp get_profile(user_id) when is_binary(user_id) do
-    case Profile.Domain.Actor.get_or_create(user_id) do
-      {:ok, pid} -> Profile.Domain.Actor.get_profile(pid)
-      _ -> nil
-    end
+  defp create_payment_account(res) do
+    res
   end
 end

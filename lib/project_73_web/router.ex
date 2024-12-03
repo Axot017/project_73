@@ -31,15 +31,15 @@ defmodule Project73Web.Router do
       live "/", HomeLive
 
       live "/login", LoginLive
+    end
+
+    live_session :authorized, on_mount: {Project73Web.LiveUserInjector, :authorized} do
+      live "/auction/new", NewAuctionLive
 
       scope "/profile" do
         live "/update", ProfileUpdateLive
         live "/wallet", WalletLive
       end
-    end
-
-    live_session :authorized, on_mount: {Project73Web.LiveUserInjector, :authorized} do
-      live "/auction/new", NewAuctionLive
     end
 
     scope "/auth" do

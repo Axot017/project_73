@@ -90,17 +90,23 @@ defmodule Project73.Profile.Domain.Actor do
   end
 
   def handle_call({:create_payment_account}, _from, state) do
-    with {:ok, payment_account_id} <- @payment_provider.create_customer(state.aggregate),
-         {:ok, events} <-
-           Aggregate.handle_command(state.aggregate, %Command.UpdatePaymentAccount{
-             payment_account_id: payment_account_id
-           }),
-         :ok <- @repository.save_events(state.aggregate.id, events) do
-      new_state = Aggregate.apply(state.aggregate, events)
-      {:reply, :ok, %__MODULE__{aggregate: new_state}}
-    else
-      {:error, _} = error ->
-        {:reply, error, state}
+    case state.aggregate.payment_account_id do
+      nil ->
+        with {:ok, payment_account_id} <- @payment_provider.create_customer(state.aggregate),
+             {:ok, events} <-
+               Aggregate.handle_command(state.aggregate, %Command.UpdatePaymentAccount{
+                 payment_account_id: payment_account_id
+               }),
+             :ok <- @repository.save_events(state.aggregate.id, events) do
+          new_state = Aggregate.apply(state.aggregate, events)
+          {:reply, :ok, %__MODULE__{aggregate: new_state}}
+        else
+          {:error, _} = error ->
+            {:reply, error, state}
+        end
+
+      _ ->
+        {:reply, :ok, state}
     end
   end
 
