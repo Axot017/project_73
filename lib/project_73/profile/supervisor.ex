@@ -11,7 +11,9 @@ defmodule Project73.Profile.Supervisor do
       {Horde.Registry, keys: :unique, name: Project73.Profile.Domain.Registry},
       {Horde.DynamicSupervisor,
        name: Project73.Profile.Domain.Supervisor, strategy: :one_for_one},
-      {Highlander, {Project73.Profile.Infra.MongoChangeListener, []}}
+      {Highlander, {Project73.Profile.Infra.MongoChangeListener, []}},
+      {Project73.Profile.Infra.ProfilesListAggregator,
+       name: Project73.Profile.Infra.ProfilesListAggregator}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
