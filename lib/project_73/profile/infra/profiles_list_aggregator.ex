@@ -171,5 +171,6 @@ defmodule Project73.Profile.Infra.ProfilesListAggregator do
 
   defp update_profile(event) do
     Logger.error("Unknown event", event: event)
+    raise "Unknown event"
   end
 end
