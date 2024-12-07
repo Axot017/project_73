@@ -87,7 +87,7 @@ defmodule Project73.Profile.Infra.ProfilesListAggregator do
 
     {1, _} =
       from(p in Profile,
-        where: p.id == ^event.id and p.version == ^event.sequence_number - 1,
+        where: p.id == ^event.id,
         update: [
           set: [
             username: ^event.username,
@@ -105,7 +105,7 @@ defmodule Project73.Profile.Infra.ProfilesListAggregator do
 
     {1, _} =
       from(p in Profile,
-        where: p.id == ^event.id and p.version == ^event.sequence_number - 1,
+        where: p.id == ^event.id,
         update: [
           set: [
             first_name: ^event.first_name,
@@ -123,7 +123,7 @@ defmodule Project73.Profile.Infra.ProfilesListAggregator do
 
     {1, _} =
       from(p in Profile,
-        where: p.id == ^event.id and p.version == ^event.sequence_number - 1,
+        where: p.id == ^event.id,
         update: [
           set: [
             last_name: ^event.last_name,
@@ -141,7 +141,7 @@ defmodule Project73.Profile.Infra.ProfilesListAggregator do
 
     {1, _} =
       from(p in Profile,
-        where: p.id == ^event.id and p.version == ^event.sequence_number - 1,
+        where: p.id == ^event.id,
         update: [
           set: [
             address_line1: ^event.address.line1,
