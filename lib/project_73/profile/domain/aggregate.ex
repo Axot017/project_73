@@ -76,6 +76,7 @@ defmodule Project73.Profile.Domain.Aggregate do
       {:ok,
        [
          %Event.PaymentAccountUpdated{
+           id: self.id,
            payment_account_id: cmd.payment_account_id,
            timestamp: DateTime.utc_now(),
            sequence_number: self.version + 1

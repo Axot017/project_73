@@ -30,7 +30,7 @@ defmodule Project73.Profile.Infra.ProfilesListAggregator do
 
   @impl true
   def handle_info({:basic_deliver, payload, %{delivery_tag: tag}}, chan) do
-    consume(chan, tag, payload)
+    Task.start(fn -> consume(chan, tag, payload) end)
     {:noreply, chan}
   end
 
@@ -76,8 +76,7 @@ defmodule Project73.Profile.Infra.ProfilesListAggregator do
       email: event.email,
       created_at: timestamp,
       updated_at: timestamp,
-      wallet_balance: Decimal.new(0),
-      version: event.sequence_number
+      wallet_balance: Decimal.new(0)
     })
   end
 
@@ -91,7 +90,6 @@ defmodule Project73.Profile.Infra.ProfilesListAggregator do
         update: [
           set: [
             username: ^event.username,
-            version: ^event.sequence_number,
             updated_at: ^timestamp
           ]
         ]
@@ -109,7 +107,6 @@ defmodule Project73.Profile.Infra.ProfilesListAggregator do
         update: [
           set: [
             first_name: ^event.first_name,
-            version: ^event.sequence_number,
             updated_at: ^timestamp
           ]
         ]
@@ -127,7 +124,6 @@ defmodule Project73.Profile.Infra.ProfilesListAggregator do
         update: [
           set: [
             last_name: ^event.last_name,
-            version: ^event.sequence_number,
             updated_at: ^timestamp
           ]
         ]
@@ -149,7 +145,23 @@ defmodule Project73.Profile.Infra.ProfilesListAggregator do
             city: ^event.address.city,
             country: ^event.address.country,
             postal_code: ^event.address.postal_code,
-            version: ^event.sequence_number,
+            updated_at: ^timestamp
+          ]
+        ]
+      )
+      |> Project73.Repo.update_all([])
+  end
+
+  defp update_profile(%Event.PaymentAccountUpdated{} = event) do
+    Logger.debug("Saving payment account updated event: #{inspect(event)}")
+    timestamp = DateTime.truncate(event.timestamp, :second)
+
+    {1, _} =
+      from(p in Profile,
+        where: p.id == ^event.id,
+        update: [
+          set: [
+            payment_account_id: ^event.payment_account_id,
             updated_at: ^timestamp
           ]
         ]
